@@ -49,16 +49,3 @@ def load_data(root, reduce=4):
     labels = np.array(labels)
 
     return images, labels
-
-
-def test():
-    # Load ORL dataset.
-    X, Y = load_data(root='../data/ORL', reduce=2)
-    print('ORL dataset: X.shape = {}, Y.shape = {}'.format(X.shape, Y.shape))
-
-    # Load Extended YaleB dataset.
-    X, Y = load_data(root='../data/CroppedYaleB', reduce=4)
-    print('Extended YalB dataset: X.shape = {}, Y.shape = {}'.format(X.shape, Y.shape))
-
-if __name__ == "__main__":
-    test()
