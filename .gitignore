@@ -1,6 +1,7 @@
 # Project specific
 code/data/CroppedYaleB/*
 code/data/ORL/*
+specification.pdf
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

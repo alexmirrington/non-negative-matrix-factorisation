@@ -1,5 +1,6 @@
 """This module contains code to load and interact with the datasets."""
 import os
+
 import numpy as np
 from PIL import Image
 
@@ -22,17 +23,18 @@ def load_data(root, reduce=4):
         for fname in os.listdir(os.path.join(root, person)):
 
             # Remove background images in Extended YaleB dataset.
-            if fname.endswith('Ambient.pgm'):
+            if fname.endswith("Ambient.pgm"):
                 continue
 
-            if not fname.endswith('.pgm'):
+            if not fname.endswith(".pgm"):
                 continue
 
             # load image.
             img = Image.open(os.path.join(root, person, fname))
             img = img.convert('L')  # grey image.
+            
             # reduce computation complexity.
-            img = img.resize([s//reduce for s in img.size])
+            img = img.resize([s // reduce for s in img.size])
 
 
             img = np.asarray(img)
