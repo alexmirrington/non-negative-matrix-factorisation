@@ -1,4 +1,11 @@
-"""This module implements NMF with hypersurface cost objective function."""
+"""This module implements NMF with a hypersurface cost objective function.
+
+The model was introduced in the following paper.
+
+A. B. Hamza and D. J. Brady, "Reconstruction of reflectance spectra using robust
+nonnegative matrix factorization," in IEEE Transactions on Signal Processing,
+vol. 54, no. 9, pp. 3637-3642, Sept. 2006, doi: 10.1109/TSP.2006.879282.
+"""
 from typing import Tuple
 import numpy as np
 from .base import NMFAlgorithm

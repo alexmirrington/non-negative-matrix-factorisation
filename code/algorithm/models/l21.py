@@ -1,4 +1,13 @@
-"""This module implements NMF with an L2,1 objective function."""
+"""This module implements NMF with an L2,1 objective function.
+
+The model was introduced in the following paper.
+
+Deguang Kong, Chris Ding, and Heng Huang. 2011.
+Robust nonnegative matrix factorization using L21-norm.
+In Proceedings of the 20th ACM international conference on Information
+and knowledge management (CIKM '11). Association for Computing Machinery,
+New York, NY, USA, 673–682. DOI:https://doi.org/10.1145/2063576.2063676
+"""
 import numpy as np
 from .base import NMFAlgorithm
 

@@ -1,4 +1,11 @@
-"""This module implements NMF with a regularised, robust L1-norm objective."""
+"""This module implements NMF with a regularised, robust L1-norm objective.
+
+The model was introduced in the following paper.
+
+Zhang, L., Chen, Z., Zheng, M. et al. Robust non-negative matrix factorization.
+Front. Electr. Electron. Eng. China 6, 192–200 (2011).
+https://doi.org/10.1007/s11460-011-0128-0
+"""
 import numpy as np
 from .base import NMFAlgorithm
 
