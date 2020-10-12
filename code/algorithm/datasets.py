@@ -1,17 +1,17 @@
-"""This module contains code to load and interact with the datasets."""
+"""Utilities for loading and interacting with the datasets."""
 import os
+from typing import Tuple
 
 import numpy as np
 from PIL import Image
 
 
-def load_data(root, reduce=4):
-    """Load ORL (or Extended YaleB) dataset to numpy array.
+def load_data(root: str, reduce: int = 4) -> Tuple[np.ndarray, np.ndarray]:
+    """Load ORL or Extended YaleB dataset to numpy array.
 
     Args:
         root: path to dataset.
         reduce: scale factor for zooming out images.
-
     """
     images, labels = [], []
 
