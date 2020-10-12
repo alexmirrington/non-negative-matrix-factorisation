@@ -6,7 +6,7 @@ import numpy as np
 class NMFAlgorithm(ABC):
     """Base class for the different NMF methods."""
 
-    def _init_matrix(self, shape: Tuple):
+    def _init_matrix(self, shape: Tuple) -> np.ndarray:
         """Initalise a matrix of the given size.
 
 
@@ -23,12 +23,16 @@ class NMFAlgorithm(ABC):
         return scale * np.random.rand(*shape)
 
     @abstractmethod
-    def reconstruction_error(self):
+    def reconstruction_error(self) -> float:
         """Return the reconstruction error between the original data and reconstructed data."""
         return
 
     @abstractmethod
-    def fit(self, max_iter: int, tol: float):
+    def reconstructed_data(self) -> np.ndarray:
+        """Return the reconstruction of the original data from the NMF model."""
+
+    @abstractmethod
+    def fit(self, max_iter: int, tol: float) -> None:
         """Update the dictionary and other matrices until convergence.
 
         The optimisation will stop after the maximum number of iterations, or when
