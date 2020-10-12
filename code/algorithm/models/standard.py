@@ -78,7 +78,6 @@ class StandardNMF(NMFAlgorithm):
             prev_error = error
         print(f"Finished convergence after reaching the maximum number of iterations ({max_iter}).")
 
-
     def _update_H(self) -> np.ndarray:
         """Update H with respect to the objective.
 

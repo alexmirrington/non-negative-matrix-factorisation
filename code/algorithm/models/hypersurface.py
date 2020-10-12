@@ -90,7 +90,6 @@ class HypersurfaceNMF(NMFAlgorithm):
             prev_error = error
         print(f"Finished convergence after reaching the maximum number of iterations.")
 
-
     def _update_W(self):
         """Update W with respect to the objctive.
 

@@ -13,7 +13,7 @@ def load_data(root: str, reduce: int = 4) -> Tuple[np.ndarray, np.ndarray]:
         root: path to dataset.
         reduce: scale factor for zooming out images.
     """
-    images, labels = [], []
+    images, ids = [], []
 
     for i, person in enumerate(sorted(os.listdir(root))):
 
@@ -50,13 +50,13 @@ def load_data(root: str, reduce: int = 4) -> Tuple[np.ndarray, np.ndarray]:
 
             # collect data and label.
             images.append(img)
-            labels.append(i)
+            ids.append(i)
 
     # concate all images and labels.
     images = np.concatenate(images, axis=1)
-    labels = np.array(labels)
+    ids = np.array(ids)
 
-    return images, labels
+    return images, ids
 
 
 def salt_and_pepper(data: np.ndarray, p: float, r: float) -> np.ndarray:

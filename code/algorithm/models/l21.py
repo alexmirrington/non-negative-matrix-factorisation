@@ -81,7 +81,6 @@ class L21NMF(NMFAlgorithm):
             prev_error = error
         print(f"Finished convergence after reaching the maximum number of iterations.")
 
-
     def reconstructed_data(self):
         """Return the reconstruction of the input data."""
         return self.W @ self.H

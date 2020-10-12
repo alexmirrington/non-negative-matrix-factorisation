@@ -91,7 +91,6 @@ class L1RobustNMF(NMFAlgorithm):
         """Return the reconstruction of the input data."""
         return self.W @ self.H + self.S
 
-
     def _update_W(self):
         """Update W with respect to the objective."""
         numerator = np.abs((self.S - self.X) @ self.H.T) - ((self.S - self.X) @ self.H.T)
