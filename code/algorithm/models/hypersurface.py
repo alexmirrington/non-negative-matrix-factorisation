@@ -8,14 +8,16 @@ vol. 54, no. 9, pp. 3637-3642, Sept. 2006, doi: 10.1109/TSP.2006.879282.
 """
 from typing import Tuple
 import numpy as np
+
 from .base import NMFAlgorithm
 
 
 class HypersurfaceNMF(NMFAlgorithm):
-    """NMF model with iterative optimisation of hypersurface cost function.
+    r"""NMF model with iterative optimisation of hypersurface cost function.
 
-    The objective is min (\sqrt(1 + ||X-WH||^2) - 1) where W is an elementwise positive d x k
-    matrix and H is an elementwise positive k x n matrix.
+    The objective is min :math:`\sqrt(1 + ||X - WH|| ^ 2) - 1` where :math:`W`
+    is an elementwise positive :math:`d \times k` matrix and H is an elementwise
+    positive :math:`k \times n` matrix.
     """
 
     def __init__(self, input_data: np.ndarray, n_components: int):
@@ -38,6 +40,10 @@ class HypersurfaceNMF(NMFAlgorithm):
         """Return the reconstruction of the input data."""
         return self.W @ self.H
 
+    def reconstruction_error(self):
+        """Return the reconstruction error between the original data and reconstructed data."""
+        return np.linalg.norm(self.X - (self.W @ self.H))
+    
     def fit(self, max_iter: int = 10000, tol: float = 1e-4, output_freq: int = 20):
         """Update matrices W and H using the multiplicative update algorithm.
 
@@ -47,7 +53,6 @@ class HypersurfaceNMF(NMFAlgorithm):
 
         This stopping criterion is commonly applied to NMF algorithms, and the following paper
         and tutorial mention it as a simple convergence criterion or baseline.
-
 
         F. G. Germain and G. J. Mysore, "Stopping Criteria for Non-Negative Matrix Factorization
         Based Supervised and Semi-Supervised Source Separation," in IEEE Signal Processing Letters,
@@ -65,10 +70,9 @@ class HypersurfaceNMF(NMFAlgorithm):
         output_freq: How many iterations between printing reconstruction error.
                         If -1, do not print.
         """
-
         prev_error = self.abs_reconstruction_error(self.X)
 
-        for iter in range(max_iter+1):
+        for iter in range(max_iter + 1):
             # Update W
             self._update_W()
             # Update R
@@ -100,7 +104,7 @@ class HypersurfaceNMF(NMFAlgorithm):
         """
         alpha = None
         numerator = (self.W @ self.H @ self.H.T) - (self.X @ self.H.T)
-        denominator = (np.sqrt(1 + np.linalg.norm(self.X - (self.W @ self.H))))
+        denominator = np.sqrt(1 + np.linalg.norm(self.X - (self.W @ self.H)))
         deriv = numerator / denominator
         alpha = self._get_armijo_coeff_W(deriv)
         self.W = self.W - alpha * deriv
@@ -117,11 +121,10 @@ class HypersurfaceNMF(NMFAlgorithm):
         The step size beta is found by Armijo search.
         """
         numerator = (self.W.T @ self.W @ self.H) - (self.W.T @ self.X)
-        denominator = (np.sqrt(1 + np.linalg.norm(self.X - (self.W @ self.H))))
+        denominator = np.sqrt(1 + np.linalg.norm(self.X - (self.W @ self.H)))
         deriv = numerator / denominator
         beta = self._get_armijo_coeff_H(deriv)
         self.H = self.H - beta * deriv
-
 
     # TODO: CURRENTLY ARMIJO STEP SIZE IS SAME FOR ALL INDICES OF THE MATRIX!
     # I'm having trouble figuring out how to do the Armijo line search. In the paper there
@@ -138,55 +141,44 @@ class HypersurfaceNMF(NMFAlgorithm):
 
     # Would love a hand here if any ideas.
 
-    def _get_armijo_coeff_W(self,
-                            deriv: np.ndarray,
-                            initial_step_size: float = 0.05,
-                            alpha: float = 0.5,
-                            beta: float = 0.5
-                            ):
+    def _get_armijo_coeff_W(
+        self,
+        deriv: np.ndarray,
+        initial_step_size: float = 0.05,
+        alpha: float = 0.5,
+        beta: float = 0.5,
+    ):
         """Find the armijo coefficient for updating W in the current iteration."""
         step_size = initial_step_size  # Initial step size value
         while not self._check_armijo_criterion_W(deriv, step_size, alpha):
             step_size = beta * step_size
         return step_size
 
-    def _check_armijo_criterion_W(self,
-                                  deriv: np.ndarray,
-                                  step_size: float,
-                                  alpha: float
-                                  ):
+    def _check_armijo_criterion_W(self, deriv: np.ndarray, step_size: float, alpha: float):
         """Check whether the armijo criterion is satisfied for the proposed update to W."""
         obj_val = 0.5 * (np.sqrt(1 + np.linalg.norm(self.X - self.W @ self.H)) - 1)
         proposed_W = self.W - step_size * deriv
         proposed_obj_val = 0.5 * (np.sqrt(1 + np.linalg.norm(self.X - proposed_W @ self.H)) - 1)
 
-        if proposed_obj_val - obj_val <= - step_size * alpha * np.linalg.norm(deriv)**2:
+        if proposed_obj_val - obj_val <= -step_size * alpha * np.linalg.norm(deriv) ** 2:
             return True
         return False
 
-
-    def _get_armijo_coeff_H(self,
-                            deriv: np.ndarray,
-                            initial_step_size: float = 1,
-                            alpha: float = 0.5,
-                            beta: float = 0.5
-                            ):
+    def _get_armijo_coeff_H(
+        self, deriv: np.ndarray, initial_step_size: float = 1, alpha: float = 0.5, beta: float = 0.5
+    ):
         """Find the armijo coefficient for updating H in the current iteration."""
         step_size = initial_step_size  # Initial step size value
         while not self._check_armijo_criterion_H(deriv, step_size, alpha):
             step_size = beta * step_size
         return step_size
 
-    def _check_armijo_criterion_H(self,
-                                  deriv: np.ndarray,
-                                  step_size: float,
-                                  alpha: float
-                                  ):
+    def _check_armijo_criterion_H(self, deriv: np.ndarray, step_size: float, alpha: float):
         """Check whether the armijo criterion is satisfied for the proposed update to H."""
         obj_val = 0.5 * (np.sqrt(1 + np.linalg.norm(self.X - self.W @ self.H)) - 1)
         proposed_H = self.H - step_size * deriv
         proposed_obj_val = 0.5 * (np.sqrt(1 + np.linalg.norm(self.X - self.W @ proposed_H)) - 1)
 
-        if proposed_obj_val - obj_val <= - step_size * alpha * np.linalg.norm(deriv)**2:
+        if proposed_obj_val - obj_val <= -step_size * alpha * np.linalg.norm(deriv) ** 2:
             return True
         return False

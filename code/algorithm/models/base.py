@@ -1,9 +1,11 @@
 """This model contains a base class with shared methods amongst the different NMF methods."""
 from abc import ABC, abstractmethod
 from typing import Tuple, List
+
 import numpy as np
 from metrics import (relative_reconstruction_error, average_accuracy,
                      normalised_mutual_info, assign_cluster_labels)
+
 
 class NMFAlgorithm(ABC):
     """Base class with shared functionality for the different NMF methods."""
@@ -36,6 +38,10 @@ class NMFAlgorithm(ABC):
         used for the 'nndsvda' and 'nndsvdar' option,
         particularly Table 1 algorithm and the discussion from Section 2.3 for avoiding zeros.
 
+        TODO:
+        Currently using random initialisation similar to sklearn random initialisation. It is
+        worthwhile reading about some other reasonable techniques and implementing, since there
+        seems to be some papers on the topic.
 
         Args
         ---

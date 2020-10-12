@@ -7,7 +7,9 @@ Front. Electr. Electron. Eng. China 6, 192–200 (2011).
 https://doi.org/10.1007/s11460-011-0128-0
 """
 import numpy as np
+
 from .base import NMFAlgorithm
+
 
 class L1RobustNMF(NMFAlgorithm):
     """NMF algorithm with L1 norm based objective with regularisation.
@@ -34,7 +36,6 @@ class L1RobustNMF(NMFAlgorithm):
         self.W, self.H = self._init_matrices([(self.d, self.k), (self.k, self.n)])
         self.lam = lam
 
-
     def fit(self, max_iter: int = 10000, tol: float = 1e-4, output_freq: int = 20):
         """Update matrices W and H using the multiplicative update algorithm.
 
@@ -60,7 +61,7 @@ class L1RobustNMF(NMFAlgorithm):
                         If -1, do not print.
         """
         prev_WH = self.W @ self.H
-        for iter in range(max_iter+1):
+        for iter in range(max_iter + 1):
             # Update S
             self._update_S()
             # Update W
@@ -91,14 +92,13 @@ class L1RobustNMF(NMFAlgorithm):
         return self.W @ self.H + self.S
 
 
-    def _update_W(self) -> np.ndarray:
+    def _update_W(self):
         """Update W with respect to the objective."""
         numerator = np.abs((self.S - self.X) @ self.H.T) - ((self.S - self.X) @ self.H.T)
         denominator = 2 * self.W @ self.H @ self.H.T
         self.W = self.W * numerator / denominator
 
-
-    def _update_H(self) -> np.ndarray:
+    def _update_H(self):
         """Update H with respect to the objective."""
         numerator = np.abs(self.W.T @ (self.S - self.X)) - (self.W.T @ (self.S - self.X))
         denominator = 2 * self.W.T @ self.W @ self.H
@@ -108,23 +108,23 @@ class L1RobustNMF(NMFAlgorithm):
         """Update S with respect to the objective."""
         new_S = self.X - self.W @ self.H
 
-        #print((new_S <= self.lam/2) & (new_S >= -self.lam/2))
-        new_S = np.where((new_S <= self.lam/2) & (new_S >= -self.lam/2), 0, new_S)
-        new_S = np.where(new_S > self.lam/2, new_S - self.lam/2, new_S)
-        new_S = np.where(new_S < -self.lam/2, new_S + self.lam/2, new_S)
+        # print((new_S <= self.lam/2) & (new_S >= -self.lam/2))
+        new_S = np.where((new_S <= self.lam / 2) & (new_S >= -self.lam / 2), 0, new_S)
+        new_S = np.where(new_S > self.lam / 2, new_S - self.lam / 2, new_S)
+        new_S = np.where(new_S < -self.lam / 2, new_S + self.lam / 2, new_S)
         self.S = new_S
 
     def _normalise_W(self):
         """Normalise W as W_{ij} = W_{ij}/sqrt(sum_k(W_{kj}^2))."""
         # Denominator is matrix same size as W but with the column norm value
         # repeated at every element in same column.
-        divisor = np.sqrt(np.sum(self.W**2, axis=0)) * np.ones(self.W.shape)
-        self.W =  self.W / divisor
+        divisor = np.sqrt(np.sum(self.W ** 2, axis=0)) * np.ones(self.W.shape)
+        self.W = self.W / divisor
 
     def _normalise_H(self):
         """Normalise H as H_{ij} = H_{ij} * sqrt(sum_k(W_{ki}^2)).
 
         All elements in ith row of H get multiplied by the ith column norm of W.
         """
-        multiplier = np.sqrt(np.sum(self.W**2, axis=0))[:, np.newaxis] * np.ones(self.H.shape)
+        multiplier = np.sqrt(np.sum(self.W ** 2, axis=0))[:, np.newaxis] * np.ones(self.H.shape)
         self.H = self.H * multiplier

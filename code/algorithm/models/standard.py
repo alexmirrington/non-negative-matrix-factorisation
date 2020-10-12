@@ -1,5 +1,6 @@
 """This module implements the Multiplicative Update Rule NMF algorithm."""
 import numpy as np
+
 from .base import NMFAlgorithm
 
 
@@ -58,10 +59,8 @@ class StandardNMF(NMFAlgorithm):
         output_freq: How many iterations between printing reconstruction error.
                         If -1, do not print.
         """
-
         prev_error = self.abs_reconstruction_error(self.X)
-
-        for iter in range(max_iter+1):
+        for iter in range(max_iter + 1):
             # Update W
             self._update_W()
             # Update R
@@ -87,7 +86,7 @@ class StandardNMF(NMFAlgorithm):
         """
         numerator = self.W.T @ self.X
         denominator = self.W.T @ self.W @ self.H
-        self.H = self.H * (numerator/denominator)
+        self.H = self.H * (numerator / denominator)
 
     def _update_W(self) -> np.ndarray:
         """Update W with respect to the objective.
@@ -96,4 +95,4 @@ class StandardNMF(NMFAlgorithm):
         """
         numerator = self.X @ self.H.T
         denominator = self.W @ self.H @ self.H.T
-        self.W = self.W * (numerator/denominator)
+        self.W = self.W * (numerator / denominator)

@@ -9,7 +9,9 @@ and knowledge management (CIKM '11). Association for Computing Machinery,
 New York, NY, USA, 673–682. DOI:https://doi.org/10.1145/2063576.2063676
 """
 import numpy as np
+
 from .base import NMFAlgorithm
+
 
 class L21NMF(NMFAlgorithm):
     """NMF model with objective function to minimise the L2,1 norm of the reconstruction.
@@ -60,10 +62,8 @@ class L21NMF(NMFAlgorithm):
         output_freq: How many iterations between printing reconstruction error.
                         If -1, do not print.
         """
-
         prev_error = self.abs_reconstruction_error(self.X)
-
-        for iter in range(max_iter+1):
+        for iter in range(max_iter + 1):
             # Update W
             self._update_W()
             # Update R
@@ -87,7 +87,7 @@ class L21NMF(NMFAlgorithm):
         return self.W @ self.H
 
     def _calculate_diag(self) -> np.ndarray:
-        """Calculates the diagonal matrix used for the updates.
+        """Calculate the diagonal matrix used for the updates.
 
         This is given by:
         W_(ii)=1//sqrt(sum_(j=1)^(p)(X-WH)_(ji)^(2))=1//|x_(i)-Wh_(i)|.

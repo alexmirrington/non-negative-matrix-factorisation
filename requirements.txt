@@ -2,3 +2,4 @@ numpy
 Pillow
 sklearn
 pre-commit
+wandb==0.10.5
