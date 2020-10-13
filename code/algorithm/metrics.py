@@ -1,6 +1,8 @@
 """Module containing implementation of metrics to evaluate NMF performance."""
 import numpy as np
 import sklearn.metrics
+import sklearn.cluster
+from collections import Counter
 
 
 def relative_reconstruction_error(clean_data: np.ndarray,
@@ -50,4 +52,26 @@ def normalised_mutual_info(Y_true: np.ndarray, Y_pred: np.ndarray) -> float:
     ---
     NMI as a float.
     """
+
     return sklearn.metrics.normalized_mutual_info_score(Y_true, Y_pred)
+
+def assign_cluster_labels(features: np.ndarray, Y_true: np.ndarray) -> np.ndarray:
+    """Assign cluster labels to input_data using k means algorithm.
+
+    Args
+    ---
+    features: Array of features to cluster. Shape: (n_samples, n_features).
+                For NMF evaluation, this is typically H.T, the transpose of the compressed
+                data features that the NMF model builds.
+    Y_true: The gold labels. For NMF evaluation this will typically be the dataset labels.
+
+    Returns
+    ---
+    An array of predicted cluster labels in range [0, n_clusters). Shape: (n_samples,)
+    """
+    kmeans = sklearn.cluster.KMeans(n_clusters=len(set(Y_true))).fit(features)
+    Y_pred = np.zeros(Y_true.shape)
+    for i in set(kmeans.labels_):
+        ind = kmeans.labels_ == i
+        Y_pred[ind] = Counter(Y_true[ind]).most_common(1)[0][0] # assign label.
+    return Y_pred

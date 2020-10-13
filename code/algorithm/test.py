@@ -7,25 +7,28 @@ def test():
     print('ORL dataset: X.shape = {}, Y.shape = {}'.format(X.shape, Y.shape))
 
 
-    # print("Testing standard NMF")
-    # standard = StandardNMF(X, n_components=len(set(Y)))
-    # standard.fit(max_iter=200)
+    print("Testing standard NMF")
+    standard = StandardNMF(X, n_components=len(set(Y)))
+    standard.fit(max_iter=200)
+    print(standard.evaluate(X, Y))
 
     # print()
     # print("Testing hypersurface NMF")
     # hypersurface = HypersurfaceNMF(X, n_components=len(set(Y)))
     # hypersurface.fit(max_iter=200)
 
-    # print()
-    # print("Testing L2,1 norm NMF")
-    # l21 = L21NMF(X, n_components=len(set(Y)))
-    # l21.fit(max_iter=200)
+    print()
+    print("Testing L2,1 norm NMF")
+    l21 = L21NMF(X, n_components=len(set(Y)))
+    l21.fit(max_iter=200)
+    print(l21.evaluate(X, Y))
 
     print()
     print("Testing L1 robust NMF")
     # Just trying a recommended lambda from the paper
     l1robust = L1RobustNMF(X, n_components=len(set(Y)), lam=0.3)
     l1robust.fit(max_iter=200)
+    print(l1robust.evaluate(X, Y))
 
 
 if __name__ == "__main__":

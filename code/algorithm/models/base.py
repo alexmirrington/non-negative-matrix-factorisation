@@ -2,6 +2,8 @@
 from abc import ABC, abstractmethod
 from typing import Tuple, List
 import numpy as np
+from metrics import (relative_reconstruction_error, average_accuracy,
+                     normalised_mutual_info, assign_cluster_labels)
 
 class NMFAlgorithm(ABC):
     """Base class with shared functionality for the different NMF methods."""
@@ -126,12 +128,15 @@ class NMFAlgorithm(ABC):
 
     @abstractmethod
     def reconstructed_data(self) -> np.ndarray:
-        """Return the reconstruction of the input data."""
+        """Return the reconstruction of the input data.
+
+        For most NMF methods implemented, this is WH.
+        """
         return
 
     @abstractmethod
     def fit(self, max_iter: int, tol: float) -> None:
-        """Update the dictionary and other matrices until convergence.
+        """Iteratively update the dictionary and other relevant matrices until convergence.
 
         The optimisation will stop after the maximum number of iterations, or when
 
@@ -141,3 +146,20 @@ class NMFAlgorithm(ABC):
         tol: Tolerance to consider convergence has stopped
         """
         return
+
+    def evaluate(self, clean_data: np.ndarray, true_labels: np.ndarray):
+        """Run evaluation.
+
+        Args
+        ---
+        clean_data: The clean data to use for calculating relative reconstruction error.
+                        Shape: (n_features, n_samples)
+        true_labels: The true data labels to evaluate clustering results.
+                        Shape: (n_samples,)
+        """
+        results = {}
+        results['RRE'] = relative_reconstruction_error(clean_data, self.reconstructed_data())
+        pred_labels = assign_cluster_labels(self.H.T, true_labels)
+        results['Accuracy'] = average_accuracy(true_labels, pred_labels)
+        results['NMI'] = normalised_mutual_info(true_labels, pred_labels)
+        return results
