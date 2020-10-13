@@ -31,8 +31,7 @@ class L21NMF(NMFAlgorithm):
         self.d = input_data.shape[0]
         self.n = input_data.shape[1]
         self.k = n_components
-        self.W = self._init_matrix((self.d, self.k))
-        self.H = self._init_matrix((self.k, self.n))
+        self.W, self.H = self._init_matrix([(self.d, self.k), (self.k, self.n)])
 
     def fit(self, max_iter=100, tol=1e-4):
         """Update matrices W and H using the multiplicative update algorithm.
@@ -48,12 +47,12 @@ class L21NMF(NMFAlgorithm):
             self.H = self._update_H()
 
             if iter % 10 == 0:
-                self.reconstruction_error = np.linalg.norm(self.X - (self.W @ self.H))
-                print("Reconstruction error: ", self.reconstruction_error)
+                print("Reconstruction error: ", self.abs_reconstruction_error(target=self.X))
 
-    def reconstruction_error(self):
-        """Return the reconstruction error between the original data and reconstructed data."""
-        return np.linalg.norm(self.X - (self.W @ self.H))
+
+    def reconstructed_data(self):
+        """Return the reconstruction of the input data."""
+        return self.W @ self.H
 
     def _calculate_diag(self):
         """Calculates the diagonal matrix used for the updates.

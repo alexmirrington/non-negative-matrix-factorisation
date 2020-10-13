@@ -31,8 +31,7 @@ class L1RobustNMF(NMFAlgorithm):
         self.d = input_data.shape[0]
         self.n = input_data.shape[1]
         self.k = n_components
-        self.W = self._init_matrix((self.d, self.k))
-        self.H = self._init_matrix((self.k, self.n))
+        self.W, self.H = self._init_matrix([(self.d, self.k), (self.k, self.n)])
         self.lam = lam
 
 
@@ -56,17 +55,16 @@ class L1RobustNMF(NMFAlgorithm):
             self.H = self._normalise_H()
 
             if iter % 10 == 0:
-                reconstruction_error = np.linalg.norm(self.X - (self.W @ self.H + self.S))
-                print("Reconstruction error: ", reconstruction_error)
+                print("Reconstruction error: ", self.abs_reconstruction_error(target=self.X))
 
-    def reconstruction_error(self):
-        """Return the reconstruction error between the original data and reconstructed data."""
-        return np.linalg.norm(self.X - (self.W @ self.H + self.S))
+
+    def reconstructed_data(self):
+        """Return the reconstruction of the input data."""
+        return self.W @ self.H + self.S
 
 
     def _update_W(self):
         """Update W with respect to the objective."""
-
         numerator = np.abs((self.S - self.X) @ self.H.T) - ((self.S - self.X) @ self.H.T)
         denominator = 2 * self.W @ self.H @ self.H.T
         return self.W * numerator / denominator

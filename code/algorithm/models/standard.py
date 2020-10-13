@@ -23,12 +23,12 @@ class StandardNMF(NMFAlgorithm):
         self.d = input_data.shape[0]
         self.n = input_data.shape[1]
         self.k = n_components
-        self.W = self._init_matrix((self.d, self.k))
-        self.H = self._init_matrix((self.k, self.n))
+        self.W, self.H = self._init_matrix([(self.d, self.k), (self.k, self.n)])
 
-    def reconstruction_error(self):
-        """Return the reconstruction error between the original data and reconstructed data."""
-        return np.linalg.norm(self.X - (self.W @ self.H))
+
+    def reconstructed_data(self):
+        """Return the reconstruction of the input data."""
+        return self.W @ self.H
 
     def fit(self, max_iter=100, tol=1e-4):
         """Update matrices W and H using the multiplicative update algorithm.
@@ -45,8 +45,7 @@ class StandardNMF(NMFAlgorithm):
 
             if iter % 10 == 0:
                 # Current workaround
-                self.Heconstruction_error = np.linalg.norm(self.X - (self.W @ self.H))
-                print("Reconstruction error: ", self.Heconstruction_error)
+                print("Reconstruction error: ", self.abs_reconstruction_error(target=self.X))
 
     def _update_H(self):
         """Update H with respect to the objective.
