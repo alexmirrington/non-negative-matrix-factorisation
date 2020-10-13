@@ -55,6 +55,8 @@ class StandardNMF(NMFAlgorithm):
         ---
         max_iter: Maximum number of iterations to run.
         tol: Tolerance for minimum relative change in error before stopping convergence.
+        output_freq: How many iterations between printing reconstruction error.
+                        If -1, do not print.
         """
 
         prev_error = self.abs_reconstruction_error(self.X)
@@ -67,7 +69,7 @@ class StandardNMF(NMFAlgorithm):
 
             error = self.abs_reconstruction_error(self.X)
 
-            if iter % output_freq == 0:
+            if iter % output_freq == 0 and output_freq > 0:
                 # Current workaround
                 print("Reconstruction error: ", error)
 
