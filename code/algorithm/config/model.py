@@ -7,5 +7,5 @@ class NMFModel(Enum):
 
     STANDARD = "standard"
     HYPERSURFACE = "hypersurface"
-    L2_1 = "l2_1"
+    L21 = "l21"
     L1_ROBUST = "l1_robust"

@@ -15,7 +15,7 @@ class ModelFactory:
         self._factory_methods = {
             NMFModel.STANDARD: ModelFactory._create_standard_nmf,
             NMFModel.HYPERSURFACE: ModelFactory._create_hypersurface_nmf,
-            NMFModel.L2_1: ModelFactory._create_l2_1_nmf,
+            NMFModel.L21: ModelFactory._create_l21_nmf,
             NMFModel.L1_ROBUST: ModelFactory._create_l1_robust_nmf,
         }
 
@@ -35,7 +35,7 @@ class ModelFactory:
         return HypersurfaceNMF(data, n_components=2048)  # TODO move `n_components` to config
 
     @staticmethod
-    def _create_l2_1_nmf(data: np.ndarray, config: argparse.Namespace) -> NMFAlgorithm:
+    def _create_l21_nmf(data: np.ndarray, config: argparse.Namespace) -> NMFAlgorithm:
         return L21NMF(data, n_components=2048)  # TODO move `n_components` to config
 
     @staticmethod
