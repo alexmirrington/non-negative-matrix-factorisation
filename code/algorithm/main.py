@@ -4,12 +4,11 @@ import os.path
 import sys
 from typing import List
 
+import wandb
 from config import Dataset, NMFModel
 from datasets import load_data
 from factories import ModelFactory
 from termcolor import colored
-
-import wandb
 
 
 def main(config: argparse.Namespace):
