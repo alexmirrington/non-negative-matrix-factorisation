@@ -17,6 +17,12 @@
 
 ----------------------
 
+## Prerequisites
+
+```Text
+python >= 3.8
+```
+
 ## Getting Started
 
 `python code/algorithm/main.py`
