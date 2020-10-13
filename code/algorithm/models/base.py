@@ -8,7 +8,9 @@ from metrics import (relative_reconstruction_error, average_accuracy,
 class NMFAlgorithm(ABC):
     """Base class with shared functionality for the different NMF methods."""
 
-    def _init_matrix(self, shapes: List[Tuple], init_type: str = 'nndsvdar') -> Tuple[np.ndarray]:
+    def _init_matrices(self,
+                       shapes: List[Tuple],
+                       init_type: str = 'nndsvdar') -> Tuple[np.ndarray]:
         """Initalise a matrix of the given size.
 
         Acknowledgements
@@ -158,8 +160,8 @@ class NMFAlgorithm(ABC):
                         Shape: (n_samples,)
         """
         results = {}
-        results['RRE'] = relative_reconstruction_error(clean_data, self.reconstructed_data())
+        results['rre'] = relative_reconstruction_error(clean_data, self.reconstructed_data())
         pred_labels = assign_cluster_labels(self.H.T, true_labels)
-        results['Accuracy'] = average_accuracy(true_labels, pred_labels)
-        results['NMI'] = normalised_mutual_info(true_labels, pred_labels)
+        results['accuracy'] = average_accuracy(true_labels, pred_labels)
+        results['nmi'] = normalised_mutual_info(true_labels, pred_labels)
         return results

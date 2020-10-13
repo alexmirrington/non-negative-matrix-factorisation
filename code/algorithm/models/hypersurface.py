@@ -31,7 +31,7 @@ class HypersurfaceNMF(NMFAlgorithm):
         self.d = input_data.shape[0]
         self.n = input_data.shape[1]
         self.k = n_components
-        self.W, self.H = self._init_matrix([(self.d, self.k), (self.k, self.n)])
+        self.W, self.H = self._init_matrices([(self.d, self.k), (self.k, self.n)])
 
 
     def reconstructed_data(self):

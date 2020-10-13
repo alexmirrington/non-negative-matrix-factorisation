@@ -31,7 +31,7 @@ class L21NMF(NMFAlgorithm):
         self.d = input_data.shape[0]
         self.n = input_data.shape[1]
         self.k = n_components
-        self.W, self.H = self._init_matrix([(self.d, self.k), (self.k, self.n)])
+        self.W, self.H = self._init_matrices([(self.d, self.k), (self.k, self.n)])
 
     def fit(self, max_iter: int = 10000, tol: float = 1e-4, output_freq: int = 20):
         """Update matrices W and H using the multiplicative update algorithm.
