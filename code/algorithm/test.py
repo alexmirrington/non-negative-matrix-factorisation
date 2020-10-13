@@ -9,7 +9,7 @@ def test():
 
     print("Testing standard NMF")
     standard = StandardNMF(X, n_components=len(set(Y)))
-    standard.fit(max_iter=200)
+    standard.fit(max_iter=10000)
     print(standard.evaluate(X, Y))
 
     # print()
@@ -20,7 +20,7 @@ def test():
     print()
     print("Testing L2,1 norm NMF")
     l21 = L21NMF(X, n_components=len(set(Y)))
-    l21.fit(max_iter=200)
+    l21.fit(max_iter=1000)
     print(l21.evaluate(X, Y))
 
     print()

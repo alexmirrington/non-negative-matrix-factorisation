@@ -33,28 +33,58 @@ class L21NMF(NMFAlgorithm):
         self.k = n_components
         self.W, self.H = self._init_matrix([(self.d, self.k), (self.k, self.n)])
 
-    def fit(self, max_iter=100, tol=1e-4):
+    def fit(self, max_iter: int = 10000, tol: float = 1e-4, output_freq: int = 20):
         """Update matrices W and H using the multiplicative update algorithm.
 
-        The optimisation will stop after the maximum number of iterations.
-        TODO: Figure out what a good way of thresholding is to stop before max_iters.
+        The optimisation will stop after the maximum number of iterations or when the
+        relative difference between the previous error and current error is less than threshold
+        tolerance. That is, when (previous_err - current_err)/previous_err < tol.
+
+        This stopping criterion is commonly applied to NMF algorithms, and the following paper
+        and tutorial mention it as a simple convergence criterion or baseline.
+
+
+        F. G. Germain and G. J. Mysore, "Stopping Criteria for Non-Negative Matrix Factorization
+        Based Supervised and Semi-Supervised Source Separation," in IEEE Signal Processing Letters,
+        vol. 21, no. 10, pp. 1284-1288, Oct. 2014, doi: 10.1109/LSP.2014.2331981.
+
+        S. Essid and A. Ozerov, "A Tutorial on Nonnegative Matrix Factorisation with
+        Applications to Audiovisual Content Analysis," Telecom ParisTech / Technicolor,
+        July 2014, https://www.cs.rochester.edu/u/jliu/CSC-576/NMF-tutorial.pdf
+
+
+        Args
+        ---
+        max_iter: Maximum number of iterations to run.
+        tol: Tolerance for minimum relative change in error before stopping convergence.
         """
+
+        prev_error = self.abs_reconstruction_error(self.X)
 
         for iter in range(max_iter+1):
             # Update W
-            self.W = self._update_W()
-            # Update H
-            self.H = self._update_H()
+            self._update_W()
+            # Update R
+            self._update_H()
 
-            if iter % 10 == 0:
-                print("Reconstruction error: ", self.abs_reconstruction_error(target=self.X))
+            error = self.abs_reconstruction_error(self.X)
+
+            if iter % output_freq == 0:
+                # Current workaround
+                print("Reconstruction error: ", error)
+
+            if (prev_error - error) / prev_error < tol:
+                print(f"Finished convergence after {iter} iterations.")
+                return
+            prev_error = error
+        print(f"Finished convergence after reaching the maximum number of iterations.")
 
 
     def reconstructed_data(self):
         """Return the reconstruction of the input data."""
         return self.W @ self.H
 
-    def _calculate_diag(self):
+    def _calculate_diag(self) -> np.ndarray:
         """Calculates the diagonal matrix used for the updates.
 
         This is given by:
@@ -70,11 +100,11 @@ class L21NMF(NMFAlgorithm):
         diag = self._calculate_diag()
         numerator = self.X @ diag @ self.H.T
         denominator = self.W @ self.H @ diag @ self.H.T
-        return self.W * numerator / denominator
+        self.W = self.W * numerator / denominator
 
     def _update_H(self):
         """Update H with respect to the objective."""
         diag = self._calculate_diag()
         numerator = self.W.T @ self.X @ diag
         denominator = self.W.T @ self.W @ self.H @ diag
-        return self.H * numerator / denominator
+        self.H = self.H * numerator / denominator

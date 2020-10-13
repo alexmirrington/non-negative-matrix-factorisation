@@ -35,46 +35,72 @@ class L1RobustNMF(NMFAlgorithm):
         self.lam = lam
 
 
-    def fit(self, max_iter=100, tol=1e-4):
-        """Update matrices D and R using the multiplicative update algorithm.
+    def fit(self, max_iter: int = 10000, tol: float = 1e-4, output_freq: int = 20):
+        """Update matrices W and H using the multiplicative update algorithm.
 
-        The optimisation will stop after the maximum number of iterations.
-        TODO: Figure out what a good way of thresholding is to stop before max_iters.
+        The optimisation will stop after the maximum number of iterations or when
+        ||WH^(k+1) - WH^(k)|| / ||WH^(k)|| < tol.
+
+        This stopping criterion is used since (previous_err - current_err)/previous_err < tol
+        is not a meaningful measure of the convergence of WH, given that S is by definition set to
+        approximate the difference between X and WH.
+
+        The idea for this stopping criterion comes from the following paper, which applies it to
+        a different model.
+
+        A. B. Hamza and D. J. Brady, "Reconstruction of reflectance spectra using robust
+        nonnegative matrix factorization," in IEEE Transactions on Signal Processing,
+        vol. 54, no. 9, pp. 3637-3642, Sept. 2006, doi: 10.1109/TSP.2006.879282.
+
+        Args
+        ---
+        max_iter: Maximum number of iterations to run.
+        tol: Tolerance for minimum relative change in error before stopping convergence.
         """
-
+        prev_WH = self.W @ self.H
         for iter in range(max_iter+1):
             # Update S
-            self.S = self._update_S()
+            self._update_S()
             # Update W
-            self.W = self._update_W()
+            self._update_W()
             # Update H
-            self.H = self._update_H()
+            self._update_H()
 
             # Normalise W and H
-            self.W = self._normalise_W()
-            self.H = self._normalise_H()
+            self._normalise_W()
+            self._normalise_H()
 
-            if iter % 10 == 0:
-                print("Reconstruction error: ", self.abs_reconstruction_error(target=self.X))
+            new_WH = self.W @ self.H
+            error = self.abs_reconstruction_error(self.X)
+
+            if iter % output_freq == 0:
+                # Current workaround
+                print("Reconstruction error (including S approximating noise): ", error)
+
+            if np.linalg.norm(new_WH - prev_WH)/np.linalg.norm(prev_WH) < tol:
+                print(f"Finished convergence after {iter} iterations.")
+                return
+            prev_WH = new_WH
+        print(f"Finished convergence after reaching the maximum number of iterations.")
 
 
-    def reconstructed_data(self):
+    def reconstructed_data(self) -> np.ndarray:
         """Return the reconstruction of the input data."""
         return self.W @ self.H + self.S
 
 
-    def _update_W(self):
+    def _update_W(self) -> np.ndarray:
         """Update W with respect to the objective."""
         numerator = np.abs((self.S - self.X) @ self.H.T) - ((self.S - self.X) @ self.H.T)
         denominator = 2 * self.W @ self.H @ self.H.T
-        return self.W * numerator / denominator
+        self.W = self.W * numerator / denominator
 
 
-    def _update_H(self):
+    def _update_H(self) -> np.ndarray:
         """Update H with respect to the objective."""
         numerator = np.abs(self.W.T @ (self.S - self.X)) - (self.W.T @ (self.S - self.X))
         denominator = 2 * self.W.T @ self.W @ self.H
-        return self.H * numerator / denominator
+        self.H = self.H * numerator / denominator
 
     def _update_S(self):
         """Update S with respect to the objective."""
@@ -84,14 +110,14 @@ class L1RobustNMF(NMFAlgorithm):
         new_S = np.where((new_S <= self.lam/2) & (new_S >= -self.lam/2), 0, new_S)
         new_S = np.where(new_S > self.lam/2, new_S - self.lam/2, new_S)
         new_S = np.where(new_S < -self.lam/2, new_S + self.lam/2, new_S)
-        return new_S
+        self.S = new_S
 
     def _normalise_W(self):
         """Normalise W as W_{ij} = W_{ij}/sqrt(sum_k(W_{kj}^2))."""
         # Denominator is matrix same size as W but with the column norm value
         # repeated at every element in same column.
         divisor = np.sqrt(np.sum(self.W**2, axis=0)) * np.ones(self.W.shape)
-        return self.W / divisor
+        self.W =  self.W / divisor
 
     def _normalise_H(self):
         """Normalise H as H_{ij} = H_{ij} * sqrt(sum_k(W_{ki}^2)).
@@ -99,4 +125,4 @@ class L1RobustNMF(NMFAlgorithm):
         All elements in ith row of H get multiplied by the ith column norm of W.
         """
         multiplier = np.sqrt(np.sum(self.W**2, axis=0))[:, np.newaxis] * np.ones(self.H.shape)
-        return self.H * multiplier
+        self.H = self.H * multiplier
