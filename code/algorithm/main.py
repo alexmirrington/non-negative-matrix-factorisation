@@ -93,12 +93,22 @@ def main(config: argparse.Namespace):
                 ]
             }
         )
-        # Plot the response of the 10 images to each component in W
-        # logger({"h": wandb.plots.HeatMap(
-        #     list(range(model.H.shape[0])),
-        #     list(range(img_count)),
-        #     model.H[:, :img_count].T
-        # )})  # TODO move to matplotlib heatmap
+        # Plot the response of the images to each component in W as a heatmap
+        h_y, h_x = np.meshgrid(np.arange(model.H.shape[0]), np.arange(img_count))
+        h_x = list(h_x.T.flatten())
+        h_y = list(h_y.T.flatten())
+        h_values = list(model.H[:, :img_count].flatten())
+        h_labels = list(labels[:img_count]) * model.H.shape[0]
+        for row in range(model.H.shape[0]):
+            for col in range(img_count):
+                assert abs(float(h_values[row * img_count + col]) - float(model.H[row][col])) < 1e-4
+                assert col == int(h_x[row * img_count + col])
+                assert row == int(h_y[row * img_count + col])
+        h = wandb.Table(
+            data=[list(row) for row in zip(h_x, h_y, h_values, h_labels)],
+            columns=["x", "y", "value", "label"],
+        )
+        logger({"h": h})
 
     # Evaluate model
     results = model.evaluate(clean_images, labels)
