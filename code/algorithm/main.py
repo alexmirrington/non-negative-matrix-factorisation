@@ -6,13 +6,12 @@ from datetime import datetime
 from pathlib import Path
 from typing import List
 
+import wandb
 from config import Dataset, Model
 from datasets import load_data
 from factories import ModelFactory
 from loggers import JSONLLogger, StreamLogger, WandbLogger
 from termcolor import colored
-
-import wandb
 
 
 def main(config: argparse.Namespace):
