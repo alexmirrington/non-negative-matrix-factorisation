@@ -67,7 +67,9 @@ def salt_and_pepper(data: np.ndarray, p: float, r: float) -> np.ndarray:
 #     return data
 
 
-def missing_block(data: np.ndarray, block_size: int, num_blocks: int = 1) -> np.ndarray:
+def missing_block(
+    data: np.ndarray, block_size: int, num_blocks: int = 1, fill: int = 255
+) -> np.ndarray:
     """Corrupt image by removing a block/s of pixels, and setting to white.
 
     If there is more than one block, the blocks may overlap.
@@ -78,14 +80,17 @@ def missing_block(data: np.ndarray, block_size: int, num_blocks: int = 1) -> np.
     block_size: Size of the block/s of pixels to be removed from each image.
     num_blocks: How many blocks to remove.
     """
-    # Get a random pixel value between (0, 0) and (x_pixels-block_size, y_pixels-block_size)
-    rand_x = np.random.randint(data.shape[0] - block_size + 1)
-    rand_y = np.random.randint(data.shape[1] - block_size + 1)
+    data = data.copy()
+    for _ in range(num_blocks):
+        # Get a random pixel value between (0, 0) and (x_pixels-block_size, y_pixels-block_size)
+        rand_x = np.random.randint(data.shape[0] - block_size + 1)
+        rand_y = np.random.randint(data.shape[1] - block_size + 1)
 
-    for i in range(block_size):
-        for j in range(block_size):
-            # Corrupt pixel
-            data[rand_x + i, rand_y + j] = 255
+        for i in range(block_size):
+            for j in range(block_size):
+                # Corrupt pixel
+                data[rand_x + i, rand_y + j] = fill
+
     return data
 
 

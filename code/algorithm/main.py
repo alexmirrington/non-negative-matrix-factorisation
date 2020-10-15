@@ -6,6 +6,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import List
 
+import numpy as np
 from config import Dataset, Model, Noise
 from datasets import load_data
 from factories import ModelFactory, PreprocessorFactory
@@ -20,10 +21,13 @@ def main(config: argparse.Namespace):
     # Determine dataset directory
     if config.dataset == Dataset.ORL:
         data_dir = os.path.join(os.path.dirname(__file__), os.path.pardir, "data", "ORL")
+        original_shape = (112, 92)
     elif config.dataset == Dataset.YALEB:
         data_dir = os.path.join(os.path.dirname(__file__), os.path.pardir, "data", "CroppedYaleB")
+        original_shape = (192, 168)
     else:
         raise NotImplementedError()
+    original_shape = tuple([s // config.reduce for s in original_shape])
 
     # Create loggers
     loggers = [StreamLogger(), JSONLLogger(Path(config.results_dir) / f"{config.id}.jsonl")]
@@ -60,15 +64,48 @@ def main(config: argparse.Namespace):
         true_labels=labels,
     )
 
+    # Log data samples and model dictionaries
+    if config.wandb:
+        img_count = 8
+        logger = WandbLogger(commit=False)
+        clean_samples = clean_images.T[:img_count].reshape((img_count, *original_shape))
+        logger({"original": [wandb.Image(sample) for sample in clean_samples]})
+        noisy_samples = noisy_images.T[:img_count].reshape((img_count, *original_shape))
+        logger({"noisy": [wandb.Image(sample) for sample in noisy_samples]})
+        reconstructed_samples = (
+            model.reconstructed_data().T[:img_count].reshape((img_count, *original_shape))
+        )
+        logger({"reconstructed": [wandb.Image(sample) for sample in reconstructed_samples]})
+        top_w_components = model.W.reshape((*original_shape, config.components))[:, :, :img_count]
+        logger(
+            {
+                "w": [
+                    wandb.Image(
+                        255
+                        * (
+                            (top_w_components[:, :, i] - np.min(top_w_components[:, :, i]))
+                            / (
+                                np.max(top_w_components[:, :, i])
+                                - np.min(top_w_components[:, :, i])
+                            )
+                        )
+                    )
+                    for i in range(top_w_components.shape[2])
+                ]
+            }
+        )
+        # Plot the response of the 10 images to each component in W
+        # logger({"h": wandb.plots.HeatMap(
+        #     list(range(model.H.shape[0])),
+        #     list(range(img_count)),
+        #     model.H[:, :img_count].T
+        # )})  # TODO move to matplotlib heatmap
+
     # Evaluate model
     results = model.evaluate(clean_images, labels)
     results = {f"test/{key}": val for key, val in results.items()}
     for logger in loggers:
         logger(results)
-
-    # Log data samples
-
-    # Log model dictionaries
 
 
 def parse_args(args: List[str]) -> argparse.Namespace:
@@ -124,12 +161,12 @@ def parse_args(args: List[str]) -> argparse.Namespace:
     )
     noise_parser.add_argument(
         "--noise-blocksize",
-        type=float,
+        type=int,
         help=f"The size of the blocks to remove when using '{Noise.MISSING_BLOCK.value}' noise.",
     )
     noise_parser.add_argument(
         "--noise-blocks",
-        type=float,
+        type=int,
         help=f"The number of blocks to remove when using '{Noise.MISSING_BLOCK.value}' noise.",
     )
     model_parser = parser.add_argument_group("model")
