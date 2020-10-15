@@ -27,12 +27,8 @@ class StreamLogger(Logger):
             color = None
             if self.coloured:
                 color = "cyan"
-                if "epoch" in key:
-                    color = None
-                elif "loss" in key:
-                    color = "red"
-                elif "accuracy" in key:
-                    color = "blue"
+                if "iteration" in key:
+                    color = "magenta"
             if isinstance(value, float):
                 value = f"{value:.4f}"
             valstr = colored(value, color=color) if color else value

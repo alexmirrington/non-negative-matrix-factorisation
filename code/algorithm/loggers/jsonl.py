@@ -21,4 +21,4 @@ class JSONLLogger(Logger):
     def __call__(self, metrics: Dict[str, Any]) -> None:
         """Log a set of key-value pairs."""
         with open(self._path, "a") as f:
-            f.write(json.dumps(metrics))
+            f.write(json.dumps(metrics) + "\n")

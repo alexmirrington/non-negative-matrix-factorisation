@@ -1,6 +1,6 @@
 """This model contains a base class with shared methods amongst the different NMF methods."""
 from abc import ABC, abstractmethod
-from typing import Tuple, List
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple
 
 import numpy as np
 from metrics import (relative_reconstruction_error, average_accuracy,
@@ -143,8 +143,16 @@ class NMFAlgorithm(ABC):
         return
 
     @abstractmethod
-    def fit(self, max_iter: int, tol: float) -> None:
-        """Iteratively update the dictionary and other relevant matrices until convergence.
+    def fit(
+        self,
+        max_iter: int,
+        tol: float,
+        callback_freq: int = 20,
+        callbacks: Optional[Iterable[Callable[[Dict[str, Any]], Any]]] = None,
+        clean_data: Optional[np.ndarray] = None,
+        true_labels: Optional[np.ndarray] = None,
+    ) -> None:
+        """Update the dictionary and other relevant matrices until convergence.
 
         The optimisation will stop after the maximum number of iterations, or when
 
@@ -152,6 +160,13 @@ class NMFAlgorithm(ABC):
         ---
         max_iter: Maximum number of iterations to run the update steps for
         tol: Tolerance to consider convergence has stopped
+        callback_freq: How many iterations between logging metrics. If -1, do not log.
+        callbacks: A sequence of functions, each of which takes a dictionary of
+            metrics as input, used for logging.
+        clean_data: The clean data to use for calculating relative reconstruction error,
+            not used for training. Shape: (n_features, n_samples)
+        true_labels: The true data labels to evaluate clustering results,
+            not used for training. Shape: (n_samples,)
         """
         return
 

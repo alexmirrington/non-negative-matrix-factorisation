@@ -6,12 +6,13 @@ from datetime import datetime
 from pathlib import Path
 from typing import List
 
-import wandb
-from config import Dataset, NMFModel
+from config import Dataset, Model
 from datasets import load_data
 from factories import ModelFactory
 from loggers import JSONLLogger, StreamLogger, WandbLogger
 from termcolor import colored
+
+import wandb
 
 
 def main(config: argparse.Namespace):
@@ -31,18 +32,35 @@ def main(config: argparse.Namespace):
 
     # Load dataset
     print(colored("dataset:", attrs=["bold"]))
-    images, ids = load_data(root=data_dir, reduce=2)
-    print(f"{config.dataset}: {images.shape}")
+    clean_images, labels = load_data(root=data_dir, reduce=2)
+    print(f"{config.dataset}: {clean_images.shape}")
+
+    # Add noise to dataset images
+    # TODO
+    noisy_images = clean_images
 
     # Create model
     print(colored("model:", attrs=["bold"]))
     model_factory = ModelFactory()
-    model = model_factory.create(images, config)
+    model = model_factory.create(noisy_images, config)
     print(config.model)
 
     # Train model
     print(colored("training:", attrs=["bold"]))
-    model.fit(max_iter=200)
+    model.fit(
+        max_iter=config.iterations,
+        tol=config.tolerance,
+        callback_freq=config.log_step,
+        callbacks=loggers,
+        clean_data=clean_images,
+        true_labels=labels,
+    )
+
+    # Evaluate model
+    results = model.evaluate(clean_images, labels)
+    results = {f"test/{key}": val for key, val in results.items()}
+    for logger in loggers:
+        logger(results)
 
 
 def parse_args(args: List[str]) -> argparse.Namespace:
@@ -60,11 +78,29 @@ def parse_args(args: List[str]) -> argparse.Namespace:
     model_parser = parser.add_argument_group("model")
     model_parser.add_argument(
         "--model",
-        type=NMFModel,
+        type=Model,
         required=True,
-        choices=list(iter(NMFModel)),
-        metavar=str({str(model.value) for model in iter(NMFModel)}),
+        choices=list(iter(Model)),
+        metavar=str({str(model.value) for model in iter(Model)}),
         help="The model to use.",
+    )
+    model_parser.add_argument(
+        "--components",
+        type=int,
+        required=True,
+        help="The number of components of the learned dictionary.",
+    )
+    model_parser.add_argument(
+        "--iterations",
+        type=int,
+        default=8192,
+        help="The maximum number of dictionary update iterations to perform.",
+    )
+    model_parser.add_argument(
+        "--tolerance",
+        type=int,
+        default=1e-4,
+        help="The maximum number of dictionary update iterations to perform.",
     )
     logging_parser = parser.add_argument_group("logging")
     logging_parser.add_argument(
@@ -72,6 +108,12 @@ def parse_args(args: List[str]) -> argparse.Namespace:
         type=str,
         default=datetime.now().strftime("%Y%m%d_%H%M%S"),
         help="A unique name to identify the run.",
+    )
+    logging_parser.add_argument(
+        "--log-step",
+        type=int,
+        default=16,
+        help="The number of iterations between logging metrics.",
     )
     logging_parser.add_argument(
         "--results-dir",
@@ -94,9 +136,8 @@ if __name__ == "__main__":
         Path(config.results_dir).mkdir()
     # Set up wandb if specified
     if config.wandb:
-        wandb.init(
-            project="non-negative-matrix-factorisation", dir=config.results_dir, config=config
-        )
-        config.name = wandb.run.id
+        wandb.init(project="non-negative-matrix-factorisation", dir=config.results_dir)
+        config.id = wandb.run.id
+        wandb.config.update(config)
     # Run the model
     main(config)

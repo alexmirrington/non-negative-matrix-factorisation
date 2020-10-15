@@ -2,7 +2,7 @@
 from enum import Enum
 
 
-class NMFModel(Enum):
+class Model(Enum):
     """Enum outlining compatible NMF model variants."""
 
     STANDARD = "standard"

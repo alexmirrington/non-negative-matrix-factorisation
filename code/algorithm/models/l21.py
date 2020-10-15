@@ -8,6 +8,8 @@ In Proceedings of the 20th ACM international conference on Information
 and knowledge management (CIKM '11). Association for Computing Machinery,
 New York, NY, USA, 673–682. DOI:https://doi.org/10.1145/2063576.2063676
 """
+from typing import Any, Callable, Dict, Iterable, Optional
+
 import numpy as np
 
 from .base import NMFAlgorithm
@@ -35,7 +37,15 @@ class L21NMF(NMFAlgorithm):
         self.k = n_components
         self.W, self.H = self._init_matrices([(self.d, self.k), (self.k, self.n)])
 
-    def fit(self, max_iter: int = 10000, tol: float = 1e-4, output_freq: int = 20):
+    def fit(
+        self,
+        max_iter: int = 10000,
+        tol: float = 1e-4,
+        callback_freq: int = 16,
+        callbacks: Optional[Iterable[Callable[[Dict[str, Any]], Any]]] = None,
+        clean_data: Optional[np.ndarray] = None,
+        true_labels: Optional[np.ndarray] = None,
+    ):
         """Update matrices W and H using the multiplicative update algorithm.
 
         The optimisation will stop after the maximum number of iterations or when the
@@ -59,8 +69,13 @@ class L21NMF(NMFAlgorithm):
         ---
         max_iter: Maximum number of iterations to run.
         tol: Tolerance for minimum relative change in error before stopping convergence.
-        output_freq: How many iterations between printing reconstruction error.
-                        If -1, do not print.
+        callback_freq: How many iterations between logging metrics. If -1, do not log.
+        callbacks: A sequence of functions, each of which takes a dictionary of
+            metrics as input, used for logging.
+        clean_data: The clean data to use for calculating relative reconstruction error,
+            not used for training. Shape: (n_features, n_samples)
+        true_labels: The true data labels to evaluate clustering results,
+            not used for training. Shape: (n_samples,)
         """
         prev_error = self.abs_reconstruction_error(self.X)
         for iter in range(max_iter + 1):
@@ -71,15 +86,27 @@ class L21NMF(NMFAlgorithm):
 
             error = self.abs_reconstruction_error(self.X)
 
-            if iter % output_freq == 0 and output_freq > 0:
-                # Current workaround
-                print("Reconstruction error: ", error)
+            if (
+                iter % callback_freq == callback_freq - 1
+                and callback_freq > 0
+                and callbacks is not None
+            ):
+                results = {"iteration": iter + 1, "train/are": error}
+                if clean_data is not None and true_labels is not None:
+                    results.update(
+                        {
+                            f"train/{key}": val
+                            for key, val in self.evaluate(clean_data, true_labels).items()
+                        }
+                    )
+                for callback in callbacks:
+                    callback(results)
 
             if (prev_error - error) / prev_error < tol:
-                print(f"Finished convergence after {iter} iterations.")
+                print(f"Converged after {iter + 1} iterations.")
                 return
             prev_error = error
-        print(f"Finished convergence after reaching the maximum number of iterations.")
+        print("Converged after reaching the maximum number of iterations.")
 
     def reconstructed_data(self):
         """Return the reconstruction of the input data."""
