@@ -1,67 +1,5 @@
-"""Utilities for loading and interacting with the datasets."""
-import os
-from typing import Callable, Optional, Tuple
-
+"""Utilities for preprocessing data."""
 import numpy as np
-from PIL import Image
-
-
-def load_data(
-    root: str, reduce: int = 4, preprocessor: Optional[Callable[[np.ndarray], np.ndarray]] = None
-) -> Tuple[np.ndarray, np.ndarray]:
-    """Load ORL or Extended YaleB dataset to numpy array.
-
-    Args:
-        root: path to dataset.
-        reduce: scale factor for zooming out images.
-    """
-    processed_images, images, ids = [], [], []
-
-    for i, person in enumerate(sorted(os.listdir(root))):
-
-        if not os.path.isdir(os.path.join(root, person)):
-            continue
-
-        for fname in os.listdir(os.path.join(root, person)):
-
-            # Remove background images in Extended YaleB dataset.
-            if fname.endswith("Ambient.pgm"):
-                continue
-
-            if not fname.endswith(".pgm"):
-                continue
-
-            # load image.
-            img = Image.open(os.path.join(root, person, fname))
-            img = img.convert('L')  # grey image.
-            
-            # reduce computation complexity.
-            img = img.resize([s // reduce for s in img.size])
-
-
-            img = np.asarray(img)
-
-            # APPLY NOISE FUNCTION TO IMAGE HERE
-            # Not sure how you want to set up config with this,
-            # as the different noises have different parameters.
-            # To discuss.
-            pimg = img
-            if preprocessor is not None:
-                pimg = preprocessor(img)
-            # convert image to numpy array.
-            pimg = pimg.reshape((-1, 1))
-            img = img.reshape((-1, 1))
-            # collect data and label.
-            processed_images.append(pimg)
-            images.append(img)
-            ids.append(i)
-
-    # concate all images and labels.
-    processed_images = np.concatenate(processed_images, axis=1)
-    images = np.concatenate(images, axis=1)
-    ids = np.array(ids)
-
-    return processed_images, images, ids
 
 
 def salt_and_pepper(data: np.ndarray, p: float, r: float) -> np.ndarray:
@@ -84,7 +22,7 @@ def salt_and_pepper(data: np.ndarray, p: float, r: float) -> np.ndarray:
     # and unchanged (-1) values which can be applied to the image
     corrupt_mask = np.full(data.size, -1)
     corrupt_mask[:num_white] = np.full(num_white, 255)
-    corrupt_mask[num_white: num_corrupt] = np.full(num_corrupt - num_white, 0)
+    corrupt_mask[num_white:num_corrupt] = np.full(num_corrupt - num_white, 0)
     np.random.shuffle(corrupt_mask)
     corrupt_mask = corrupt_mask.reshape(data.shape)
 
@@ -92,6 +30,7 @@ def salt_and_pepper(data: np.ndarray, p: float, r: float) -> np.ndarray:
     data = np.where(corrupt_mask == -1, data, corrupt_mask)
 
     return data
+
 
 # def salt_and_pepper(data: np.ndarray, p: float, r: float) -> np.ndarray:
 #     """Corrupt input data with salt and pepper noise.
@@ -138,9 +77,7 @@ def missing_block(data: np.ndarray, block_size: int, num_blocks: int = 1) -> np.
     data: The input data to be corrupted. Shape: (x_pixels, y_pixels).
     block_size: Size of the block/s of pixels to be removed from each image.
     num_blocks: How many blocks to remove.
-
     """
-
     # Get a random pixel value between (0, 0) and (x_pixels-block_size, y_pixels-block_size)
     rand_x = np.random.randint(data.shape[0] - block_size + 1)
     rand_y = np.random.randint(data.shape[1] - block_size + 1)
@@ -161,10 +98,8 @@ def gaussian(data: np.ndarray, mean: float = 0, std: float = 1):
     mean: The mean of the noise.
     std: Standard deviation of the noise.
     """
-    noise = np.random.normal(mean, std, data.shape)
-    print(f"{np.mean(noise)=}")
-    print(f"{np.std(noise)=}")
     # Add noise, ensuring values remain between 0 and 255
+    noise = np.random.normal(mean, std, data.shape)
     return np.clip(data + noise, 0, 255)
 
 
@@ -179,13 +114,12 @@ def uniform(data: np.ndarray, mean: float = 0, std: float = 1):
     mean: The mean of the noise.
     scale: Scales max magnitude of the noise.
     """
+    # Math:
     # std = (max - min) / sqrt(12)
     # std = ((mean + spread) - (mean - spread)) / sqrt(12) where spread = (max - min)/2
     # std = (2 * spread) / sqrt(12)
     # spread = std * sqrt(3)
-    noise = np.random.uniform(mean - std * 3 ** 0.5, mean + std * 3 ** 0.5, data.shape)
-    print(f"{np.mean(noise)=}")
-    print(f"{np.std(noise)=}")
 
     # Add noise, ensuring values remain between 0 and 255
+    noise = np.random.uniform(mean - std * 3 ** 0.5, mean + std * 3 ** 0.5, data.shape)
     return np.clip(data + noise, 0, 255)

@@ -8,7 +8,7 @@ from typing import List
 
 from config import Dataset, Model, Noise
 from datasets import load_data
-from factories import ModelFactory
+from factories import ModelFactory, PreprocessorFactory
 from loggers import JSONLLogger, StreamLogger, WandbLogger
 from termcolor import colored
 
@@ -30,14 +30,18 @@ def main(config: argparse.Namespace):
     if config.wandb:
         loggers.append(WandbLogger())
 
+    # Create preprocessor (noise function)
+    print(colored("preprocessor:", attrs=["bold"]))
+    preprocessor_factory = PreprocessorFactory()
+    preprocessor = preprocessor_factory.create(config)
+    print(config.noise)
+
     # Load dataset
     print(colored("dataset:", attrs=["bold"]))
-    clean_images, labels = load_data(root=data_dir, reduce=config.reduce)
+    noisy_images, clean_images, labels = load_data(
+        root=data_dir, reduce=config.reduce, preprocessor=preprocessor
+    )
     print(f"{config.dataset}: {clean_images.shape}")
-
-    # Add noise to dataset images
-    # TODO
-    noisy_images = clean_images
 
     # Create model
     print(colored("model:", attrs=["bold"]))
@@ -61,6 +65,10 @@ def main(config: argparse.Namespace):
     results = {f"test/{key}": val for key, val in results.items()}
     for logger in loggers:
         logger(results)
+
+    # Log data samples
+
+    # Log model dictionaries
 
 
 def parse_args(args: List[str]) -> argparse.Namespace:
