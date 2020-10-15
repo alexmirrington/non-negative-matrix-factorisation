@@ -38,7 +38,6 @@ def load_data(root: str, reduce: int = 4) -> Tuple[np.ndarray, np.ndarray]:
 
 
             img = np.asarray(img)
-            print(img)
             # APPLY NOISE FUNCTION TO IMAGE HERE
             # Not sure how you want to set up config with this,
             # as the different noises have different parameters.
