@@ -7,13 +7,12 @@ from pathlib import Path
 from typing import List
 
 import numpy as np
+import wandb
 from config import Dataset, Model, Noise
 from datasets import load_data
 from factories import ModelFactory, PreprocessorFactory
 from loggers import JSONLLogger, StreamLogger, WandbLogger
 from termcolor import colored
-
-import wandb
 
 
 def main(config: argparse.Namespace):
