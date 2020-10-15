@@ -6,12 +6,13 @@ from datetime import datetime
 from pathlib import Path
 from typing import List
 
-import wandb
-from config import Dataset, Model
+from config import Dataset, Model, Noise
 from datasets import load_data
 from factories import ModelFactory
 from loggers import JSONLLogger, StreamLogger, WandbLogger
 from termcolor import colored
+
+import wandb
 
 
 def main(config: argparse.Namespace):
@@ -31,7 +32,7 @@ def main(config: argparse.Namespace):
 
     # Load dataset
     print(colored("dataset:", attrs=["bold"]))
-    clean_images, labels = load_data(root=data_dir, reduce=2)
+    clean_images, labels = load_data(root=data_dir, reduce=config.reduce)
     print(f"{config.dataset}: {clean_images.shape}")
 
     # Add noise to dataset images
@@ -69,16 +70,65 @@ def parse_args(args: List[str]) -> argparse.Namespace:
     data_parser.add_argument(
         "--dataset",
         type=Dataset,
-        required=True,
+        default=Dataset.ORL,
         choices=list(iter(Dataset)),
         metavar=str({str(dataset.value) for dataset in iter(Dataset)}),
         help="The dataset to use.",
+    )
+    data_parser.add_argument(
+        "--reduce",
+        type=int,
+        default=1,
+        help="Factor by which to reduce the width and height of each input image.",
+    )
+    noise_parser = parser.add_argument_group("noise")
+    noise_parser.add_argument(
+        "--noise",
+        type=Noise,
+        choices=list(iter(Noise)),
+        metavar=str({str(noise.value) for noise in iter(Noise)}),
+        help="The noise function to use",
+    )
+    noise_parser.add_argument(
+        "--noise-p",
+        type=float,
+        help="The proportion of pixels that should be made either white or black"
+        + f"when using '{Noise.SALT_AND_PEPPER.value}' noise.",
+    )
+    noise_parser.add_argument(
+        "--noise-r",
+        type=float,
+        help="The proportion of the corrupted pixels that are white when using"
+        + f"'{Noise.SALT_AND_PEPPER.value}' noise. Conversely (1-r) is the "
+        + "proportion of corrupted pixels that are black.",
+    )
+    noise_parser.add_argument(
+        "--noise-mean",
+        type=float,
+        help=f"The mean value of the noise when using '{Noise.GAUSSIAN.value}' "
+        + f"or '{Noise.UNIFORM.value}' noise.",
+    )
+    noise_parser.add_argument(
+        "--noise-std",
+        type=float,
+        help=f"The standard deviation of the noise when using '{Noise.GAUSSIAN.value}' "
+        + f"or '{Noise.UNIFORM.value}' noise.",
+    )
+    noise_parser.add_argument(
+        "--noise-blocksize",
+        type=float,
+        help=f"The size of the blocks to remove when using '{Noise.MISSING_BLOCK.value}' noise.",
+    )
+    noise_parser.add_argument(
+        "--noise-blocks",
+        type=float,
+        help=f"The number of blocks to remove when using '{Noise.MISSING_BLOCK.value}' noise.",
     )
     model_parser = parser.add_argument_group("model")
     model_parser.add_argument(
         "--model",
         type=Model,
-        required=True,
+        default=Model.STANDARD,
         choices=list(iter(Model)),
         metavar=str({str(model.value) for model in iter(Model)}),
         help="The model to use.",
@@ -86,7 +136,7 @@ def parse_args(args: List[str]) -> argparse.Namespace:
     model_parser.add_argument(
         "--components",
         type=int,
-        required=True,
+        default=40,
         help="The number of components of the learned dictionary.",
     )
     model_parser.add_argument(
@@ -123,8 +173,33 @@ def parse_args(args: List[str]) -> argparse.Namespace:
     logging_parser.add_argument(
         "--wandb", action="store_true", help="Sync results to wandb if specified."
     )
-
-    return parser.parse_args(args)
+    parsed_args = parser.parse_args(args)
+    # Perform post-parse validation
+    if parsed_args.noise is not None:
+        if parsed_args.noise in (Noise.UNIFORM, Noise.GAUSSIAN):
+            assert parsed_args.noise_mean is not None
+            assert parsed_args.noise_std is not None
+            assert parsed_args.noise_r is None
+            assert parsed_args.noise_p is None
+            assert parsed_args.noise_blocksize is None
+            assert parsed_args.noise_blocks is None
+        elif parsed_args.noise == Noise.MISSING_BLOCK:
+            assert parsed_args.noise_mean is None
+            assert parsed_args.noise_std is None
+            assert parsed_args.noise_r is None
+            assert parsed_args.noise_p is None
+            assert parsed_args.noise_blocksize is not None
+            assert parsed_args.noise_blocks is not None
+        elif parsed_args.noise == Noise.SALT_AND_PEPPER:
+            assert parsed_args.noise_mean is None
+            assert parsed_args.noise_std is None
+            assert parsed_args.noise_r is not None
+            assert parsed_args.noise_p is not None
+            assert parsed_args.noise_blocksize is None
+            assert parsed_args.noise_blocks is None
+        else:
+            raise NotImplementedError()
+    return parsed_args
 
 
 if __name__ == "__main__":

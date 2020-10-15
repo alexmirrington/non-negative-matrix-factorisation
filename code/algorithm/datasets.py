@@ -68,7 +68,7 @@ def salt_and_pepper(data: np.ndarray, p: float, r: float) -> np.ndarray:
     ---
     data: The input image to be corrupted. Shape: (x_pixels, y_pixels).
     p: The proportion of pixels that should be made either white or black
-    r: The proportion of the corrupted pixels that are white. Conversely (1-p) is the
+    r: The proportion of the corrupted pixels that are white. Conversely (1-r) is the
         proportion of corrupted pixels that are black.
     """
     num_corrupt = int(round(data.size * p))
@@ -146,23 +146,26 @@ def missing_block(data: np.ndarray, block_size: int, num_blocks: int = 1) -> np.
     return data
 
 
-def gaussian(data: np.ndarray, mean: float = 0, scale: float = 40):
+def gaussian(data: np.ndarray, mean: float = 0, std: float = 1):
     """Corrupt image by adding Gaussian noise to pixel values.
 
     Args
     ---
     data: The input image to be corrupted. Shape: (x_pixels, y_pixels)
     mean: The mean of the noise.
-    scale: Standard deviation of the noise.
+    std: Standard deviation of the noise.
     """
-    noise = np.random.rand(mean, variance, data.shape)
+    noise = np.random.normal(mean, std, data.shape)
+    print(f"{np.mean(noise)=}")
+    print(f"{np.std(noise)=}")
     # Add noise, ensuring values remain between 0 and 255
     return np.clip(data + noise, 0, 255)
 
-def uniform(data: np.ndarray, mean: float = 0, scale: float = 40):
+
+def uniform(data: np.ndarray, mean: float = 0, std: float = 1):
     """Corrupt image with uniform distributed noise.
 
-    The resultant noise will lie in [-scale + mean, scale + mean].
+    The resultant noise will lie in [mean - sqrt(3) * std, mean + sqrt(3) * std].
 
     Args
     ---
@@ -170,6 +173,13 @@ def uniform(data: np.ndarray, mean: float = 0, scale: float = 40):
     mean: The mean of the noise.
     scale: Scales max magnitude of the noise.
     """
-    noise = np.random.rand(low = -scale + mean, high = scale + mean)
+    # std = (max - min) / sqrt(12)
+    # std = ((mean + spread) - (mean - spread)) / sqrt(12) where spread = (max - min)/2
+    # std = (2 * spread) / sqrt(12)
+    # spread = std * sqrt(3)
+    noise = np.random.uniform(mean - std * 3 ** 0.5, mean + std * 3 ** 0.5, data.shape)
+    print(f"{np.mean(noise)=}")
+    print(f"{np.std(noise)=}")
+
     # Add noise, ensuring values remain between 0 and 255
     return np.clip(data + noise, 0, 255)
