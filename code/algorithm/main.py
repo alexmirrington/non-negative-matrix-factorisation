@@ -325,6 +325,6 @@ if __name__ == "__main__":
     if config.wandb:
         wandb.init(project="non-negative-matrix-factorisation", dir=config.results_dir)
         config.id = wandb.run.id
-        wandb.config.update(config)
+        wandb.config.update(config, allow_val_change=True)
     # Run the model
     main(config)
