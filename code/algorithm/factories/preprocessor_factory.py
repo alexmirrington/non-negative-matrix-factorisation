@@ -3,8 +3,9 @@ import argparse
 from typing import Callable
 
 import numpy as np
-from config import Noise
 from preprocessing import gaussian, missing_block, salt_and_pepper, uniform
+
+from config import Noise
 
 
 class PreprocessorFactory:

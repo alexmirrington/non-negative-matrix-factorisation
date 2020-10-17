@@ -2,9 +2,10 @@
 import argparse
 
 import numpy as np
-from config import Model
 from models import L21NMF, HypersurfaceNMF, L1RobustNMF, StandardNMF
 from models.base import NMFAlgorithm
+
+from config import Model
 
 
 class ModelFactory:
