@@ -1,5 +1,6 @@
 program: code/algorithm/main.py
 method: grid
+project: "non-negative-matrix-factorisation"
 name: "noise-salt-and-pepper"
 description: "Grid search over multiple models with salt-and-peppered inputs."
 parameters:
