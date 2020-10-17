@@ -10,17 +10,21 @@ from pathlib import Path
 from typing import List
 
 import numpy as np
-from config import Dataset, Model, Noise
+import wandb
 from datasets import load_data
 from factories import ModelFactory, PreprocessorFactory
 from loggers import JSONLLogger, StreamLogger, WandbLogger
 from termcolor import colored
+from utilities import rescale
 
-import wandb
+from config import Dataset, Model, Noise
 
 
 def main(config: argparse.Namespace):
     """Train or evaluate a dictionary learning model."""
+    # Set prng seeds
+    np.random.seed(config.seed)
+
     # Determine dataset directory
     if config.dataset == Dataset.ORL:
         data_dir = os.path.join(os.path.dirname(__file__), os.path.pardir, "data", "ORL")
@@ -48,52 +52,75 @@ def main(config: argparse.Namespace):
     noisy_images, clean_images, labels = load_data(
         root=data_dir, reduce=config.reduce, preprocessor=preprocessor
     )
-    print(f"{config.dataset}: {clean_images.shape}")
+    print(config.dataset)
+    print(f"full: {clean_images.shape}")
 
+    # Generate indices to train and test on
+    indices = np.random.permutation(labels.shape[0])
+    take = int(config.subset * labels.shape[0])
+    train_data = noisy_images[:, indices][:, :take]
+    test_data = clean_images[:, indices][:, :take]
+    test_labels = labels[indices][:take]
+    print(
+        f"subset: {train_data.shape} using indices",
+        f"[{', '.join([str(val) for val in indices[:min(10, take)]])}, ...]",
+    )
     # Create model
     print(colored("model:", attrs=["bold"]))
     model_factory = ModelFactory()
-    model = model_factory.create(noisy_images, config)
+    model = model_factory.create(train_data, config)
     print(config.model)
 
-    # Train model
+    # Train and evaluate model
     print(colored("training:", attrs=["bold"]))
     model.fit(
         max_iter=config.iterations,
         tol=config.tolerance,
         callback_freq=config.log_step,
         callbacks=loggers,
-        clean_data=clean_images,
-        true_labels=labels,
+        clean_data=test_data,
+        true_labels=test_labels,
     )
 
     # Log data samples and model dictionaries
     if config.wandb:
         img_count = 8
         logger = WandbLogger(commit=False)
-        clean_samples = clean_images.T[:img_count].reshape((img_count, *original_shape))
-        logger({"original": [wandb.Image(sample) for sample in clean_samples]})
-        noisy_samples = noisy_images.T[:img_count].reshape((img_count, *original_shape))
-        logger({"noisy": [wandb.Image(sample) for sample in noisy_samples]})
+        test_samples = test_data.T[:img_count].reshape((img_count, *original_shape))
+        logger(
+            {
+                "original": [
+                    wandb.Image(sample, caption=f"id: {indices[i]}, class: {test_labels[i]}")
+                    for i, sample in enumerate(test_samples)
+                ]
+            }
+        )
+        train_samples = train_data.T[:img_count].reshape((img_count, *original_shape))
+        logger(
+            {
+                "noisy": [
+                    wandb.Image(sample, caption=f"id: {indices[i]}, class: {test_labels[i]}")
+                    for i, sample in enumerate(train_samples)
+                ]
+            }
+        )
         reconstructed_samples = (
             model.reconstructed_data().T[:img_count].reshape((img_count, *original_shape))
         )
-        logger({"reconstructed": [wandb.Image(sample) for sample in reconstructed_samples]})
-        top_w_components = model.W.reshape((*original_shape, config.components))[:, :, :img_count]
+        logger(
+            {
+                "reconstructed": [
+                    wandb.Image(sample, caption=f"id: {indices[i]}, class: {test_labels[i]}")
+                    for i, sample in enumerate(reconstructed_samples)
+                ]
+            }
+        )
+        w_components = model.W.reshape((*original_shape, config.components))[:, :, :img_count]
         logger(
             {
                 "w": [
-                    wandb.Image(
-                        255
-                        * (
-                            (top_w_components[:, :, i] - np.min(top_w_components[:, :, i]))
-                            / (
-                                np.max(top_w_components[:, :, i])
-                                - np.min(top_w_components[:, :, i])
-                            )
-                        )
-                    )
-                    for i in range(top_w_components.shape[2])
+                    wandb.Image(rescale(w_components[:, :, i]), caption=f"component: {i}")
+                    for i in range(w_components.shape[2])
                 ]
             }
         )
@@ -102,7 +129,8 @@ def main(config: argparse.Namespace):
         h_x = list(h_x.T.flatten())
         h_y = list(h_y.T.flatten())
         h_values = list(model.H[:, :img_count].flatten())
-        h_labels = list(labels[:img_count]) * model.H.shape[0]
+        h_labels = list(test_labels[:img_count]) * model.H.shape[0]
+        # Assert matrix reshapes match up
         for row in range(model.H.shape[0]):
             for col in range(img_count):
                 assert abs(float(h_values[row * img_count + col]) - float(model.H[row][col])) < 1e-4
@@ -113,12 +141,6 @@ def main(config: argparse.Namespace):
             columns=["x", "y", "value", "label"],
         )
         logger({"h": h})
-
-    # Evaluate model
-    results = model.evaluate(clean_images, labels)
-    results = {f"test/{key}": val for key, val in results.items()}
-    for logger in loggers:
-        logger(results)
 
 
 def parse_args(args: List[str]) -> argparse.Namespace:
@@ -140,16 +162,16 @@ def parse_args(args: List[str]) -> argparse.Namespace:
         help="Factor by which to reduce the width and height of each input image.",
     )
     data_parser.add_argument(
-        "--folds",
+        "--subset",
         type=int,
-        default=10,
-        help="The number of folds to use for stratified k-fold cross validation.",
+        default=0.9,
+        help="A float between 0 and 1, the amount of training data to train on.",
     )
     data_parser.add_argument(
-        "--fold",
+        "--seed",
         type=int,
         default=0,
-        help="The stratified k-fold cross validation split to use for evaluation.",
+        help="The seed to use when choosing a subset of the data to train on.",
     )
     noise_parser = parser.add_argument_group("noise")
     noise_parser.add_argument(
@@ -206,8 +228,9 @@ def parse_args(args: List[str]) -> argparse.Namespace:
     model_parser.add_argument(
         "--components",
         type=int,
-        default=40,
-        help="The number of components of the learned dictionary.",
+        default=None,
+        help="The number of components of the learned dictionary."
+        + "Defaults to the number of unique dataset classes.",
     )
     model_parser.add_argument(
         "--iterations",
@@ -244,6 +267,11 @@ def parse_args(args: List[str]) -> argparse.Namespace:
         "--wandb", action="store_true", help="Sync results to wandb if specified."
     )
     parsed_args = parser.parse_args(args)
+    if parsed_args.components is None:
+        if parsed_args.dataset == Dataset.ORL:
+            parsed_args.components = 40
+        elif parsed_args.dataset == Dataset.YALEB:
+            parsed_args.components = 38
     # Perform post-parse validation
     if parsed_args.noise is not None:
         if parsed_args.noise in (Noise.UNIFORM, Noise.GAUSSIAN):
@@ -278,17 +306,17 @@ if __name__ == "__main__":
     # Create folders for results if they do not exist
     if not Path(config.results_dir).exists():
         Path(config.results_dir).mkdir()
-    # Inject a `fold_group` field into the config, which is identical for runs
-    # that have the same config ignoring `config.fold` and other irrelevant fields.
-    # This allows k-fold cross-validation to be performed across k separate processes.
-    # CAVEATS: The following assumes the config is not nested.
+    # Inject a `seed_group` field into the config, which is identical for runs
+    # that have the same config ignoring `config.seed` and other irrelevant fields.
+    # This allows us to report mean and variance of runs with different training data
+    # across separate processes.
     config_dict = copy(config.__dict__)
     del config_dict["id"]
-    del config_dict["fold"]
+    del config_dict["seed"]
     del config_dict["results_dir"]
-    print(f"{json.dumps(config_dict, sort_keys=True, default=str)=}")
+    # CAVEAT: The following assumes the config is not nested.
     config.__setattr__(
-        "fold_group",
+        "seed_group",
         hashlib.sha256(
             bytes(json.dumps(config_dict, sort_keys=True, default=str), encoding="UTF-8")
         ).hexdigest(),

@@ -1,0 +1,27 @@
+program: code/algorithm/main.py
+method: grid
+name: "noise-salt-and-pepper"
+description: "Grid search over multiple models with salt-and-peppered inputs."
+parameters:
+  subset:
+    value: 0.9
+  reduce:
+    value: 1
+  noise:
+    value: "salt_and_pepper"
+  seed:
+    values: [0, 1, 2, 3, 4]
+  model:
+    values: ["standard", "l21"]
+  noise-p:
+    values: [0.1, 0.2, 0.4]
+  noise-r:
+    values: [0, 0.5, 1]
+  dataset:
+    values: ["orl", "yaleb"]
+command:
+  - ${env}
+  - ${interpreter}
+  - ${program}
+  - "--wandb"
+  - ${args}

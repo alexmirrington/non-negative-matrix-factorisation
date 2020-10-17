@@ -78,7 +78,7 @@ class L21NMF(NMFAlgorithm):
             not used for training. Shape: (n_samples,)
         """
         prev_error = self.abs_reconstruction_error(self.X)
-        for iter in range(max_iter + 1):
+        for iter in range(max_iter):
             # Update W
             self._update_W()
             # Update R
@@ -86,26 +86,15 @@ class L21NMF(NMFAlgorithm):
 
             error = self.abs_reconstruction_error(self.X)
 
-            if (
-                iter % callback_freq == callback_freq - 1
-                and callback_freq > 0
-                and callbacks is not None
-            ):
-                results = {"iteration": iter + 1, "train/are": error}
-                if clean_data is not None and true_labels is not None:
-                    results.update(
-                        {
-                            f"train/{key}": val
-                            for key, val in self.evaluate(clean_data, true_labels).items()
-                        }
-                    )
-                for callback in callbacks:
-                    callback(results)
+            if iter % callback_freq == callback_freq - 1 and callback_freq > 0:
+                self._log(iter, error, clean_data, true_labels, callbacks)
 
             if (prev_error - error) / prev_error < tol:
+                self._log(iter, error, clean_data, true_labels, callbacks)
                 print(f"Converged after {iter + 1} iterations.")
                 return
             prev_error = error
+        self._log(iter, error, clean_data, true_labels, callbacks)
         print("Converged after reaching the maximum number of iterations.")
 
     def reconstructed_data(self):

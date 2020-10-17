@@ -130,6 +130,19 @@ class NMFAlgorithm(ABC):
         else:
             raise ValueError("init_type must be one of 'random', 'nndsvda', nndsvdar.")
 
+    def _log(self, iteration, error, clean_data, true_labels, callbacks):
+        if callbacks is not None:
+            results = {"iteration": iteration + 1, "train/are": error}
+            if clean_data is not None and true_labels is not None:
+                results.update(
+                    {
+                        f"test/{key}": val
+                        for key, val in self.evaluate(clean_data, true_labels).items()
+                    }
+                )
+            for callback in callbacks:
+                callback(results)
+
     def abs_reconstruction_error(self, target: np.ndarray) -> float:
         """Return the Frobenius norm of the difference between target and reconstructed data."""
         return np.linalg.norm(target - self.reconstructed_data())
