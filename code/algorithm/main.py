@@ -10,13 +10,13 @@ from pathlib import Path
 from typing import List
 
 import numpy as np
+import wandb
 from datasets import load_data
 from factories import ModelFactory, PreprocessorFactory
 from loggers import JSONLLogger, StreamLogger, WandbLogger
 from termcolor import colored
 from utilities import rescale
 
-import wandb
 from config import Dataset, Model, Noise
 
 
@@ -182,37 +182,37 @@ def parse_args(args: List[str]) -> argparse.Namespace:
         help="The noise function to use",
     )
     noise_parser.add_argument(
-        "--noise-p",
+        "--noise_p",
         type=float,
         help="The proportion of pixels that should be made either white or black"
         + f"when using '{Noise.SALT_AND_PEPPER.value}' noise.",
     )
     noise_parser.add_argument(
-        "--noise-r",
+        "--noise_r",
         type=float,
         help="The proportion of the corrupted pixels that are white when using"
         + f"'{Noise.SALT_AND_PEPPER.value}' noise. Conversely (1-r) is the "
         + "proportion of corrupted pixels that are black.",
     )
     noise_parser.add_argument(
-        "--noise-mean",
+        "--noise_mean",
         type=float,
         help=f"The mean value of the noise when using '{Noise.GAUSSIAN.value}' "
         + f"or '{Noise.UNIFORM.value}' noise.",
     )
     noise_parser.add_argument(
-        "--noise-std",
+        "--noise_std",
         type=float,
         help=f"The standard deviation of the noise when using '{Noise.GAUSSIAN.value}' "
         + f"or '{Noise.UNIFORM.value}' noise.",
     )
     noise_parser.add_argument(
-        "--noise-blocksize",
+        "--noise_blocksize",
         type=int,
         help=f"The size of the blocks to remove when using '{Noise.MISSING_BLOCK.value}' noise.",
     )
     noise_parser.add_argument(
-        "--noise-blocks",
+        "--noise_blocks",
         type=int,
         help=f"The number of blocks to remove when using '{Noise.MISSING_BLOCK.value}' noise.",
     )
@@ -252,13 +252,13 @@ def parse_args(args: List[str]) -> argparse.Namespace:
         help="A unique name to identify the run.",
     )
     logging_parser.add_argument(
-        "--log-step",
+        "--log_step",
         type=int,
         default=16,
         help="The number of iterations between logging metrics.",
     )
     logging_parser.add_argument(
-        "--results-dir",
+        "--results_dir",
         type=str,
         default=str((Path(__file__).resolve().parent.parent / "results")),
         help="The directory to save results to.",
@@ -325,6 +325,11 @@ if __name__ == "__main__":
     if config.wandb:
         wandb.init(project="non-negative-matrix-factorisation", dir=config.results_dir)
         config.id = wandb.run.id
-        wandb.config.update(config, allow_val_change=True)
+        # Serialise and deserialise config to convert enums to strings before
+        # sending to wandb
+        wandb_config = json.dumps(config.__dict__, sort_keys=True, default=lambda x: x.value)
+        wandb_config = json.loads(wandb_config)
+        del wandb_config["id"]
+        wandb.config.update(wandb_config)
     # Run the model
     main(config)

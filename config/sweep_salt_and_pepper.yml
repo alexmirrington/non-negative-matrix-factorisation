@@ -4,19 +4,13 @@ project: "non-negative-matrix-factorisation"
 name: "noise-salt-and-pepper"
 description: "Grid search over multiple models with salt-and-peppered inputs."
 parameters:
-  subset:
-    value: 0.9
-  reduce:
-    value: 1
-  noise:
-    value: "salt_and_pepper"
   seed:
     values: [0, 1, 2, 3, 4]
   model:
     values: ["standard", "l21"]
-  noise-p:
+  noise_p:
     values: [0.1, 0.2, 0.4]
-  noise-r:
+  noise_r:
     values: [0, 0.5, 1]
   dataset:
     values: ["orl", "yaleb"]
@@ -25,4 +19,6 @@ command:
   - ${interpreter}
   - ${program}
   - "--wandb"
+  - "--noise"
+  - "salt_and_pepper"
   - ${args}
