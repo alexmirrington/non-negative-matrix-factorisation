@@ -1,18 +1,22 @@
 """Main entrypoint for model training and evaluation."""
 import argparse
+import hashlib
+import json
 import os.path
 import sys
+from copy import copy
 from datetime import datetime
 from pathlib import Path
 from typing import List
 
 import numpy as np
-import wandb
 from config import Dataset, Model, Noise
 from datasets import load_data
 from factories import ModelFactory, PreprocessorFactory
 from loggers import JSONLLogger, StreamLogger, WandbLogger
 from termcolor import colored
+
+import wandb
 
 
 def main(config: argparse.Namespace):
@@ -134,6 +138,18 @@ def parse_args(args: List[str]) -> argparse.Namespace:
         type=int,
         default=1,
         help="Factor by which to reduce the width and height of each input image.",
+    )
+    data_parser.add_argument(
+        "--folds",
+        type=int,
+        default=10,
+        help="The number of folds to use for stratified k-fold cross validation.",
+    )
+    data_parser.add_argument(
+        "--fold",
+        type=int,
+        default=0,
+        help="The stratified k-fold cross validation split to use for evaluation.",
     )
     noise_parser = parser.add_argument_group("noise")
     noise_parser.add_argument(
@@ -262,6 +278,21 @@ if __name__ == "__main__":
     # Create folders for results if they do not exist
     if not Path(config.results_dir).exists():
         Path(config.results_dir).mkdir()
+    # Inject a `fold_group` field into the config, which is identical for runs
+    # that have the same config ignoring `config.fold` and other irrelevant fields.
+    # This allows k-fold cross-validation to be performed across k separate processes.
+    # CAVEATS: The following assumes the config is not nested.
+    config_dict = copy(config.__dict__)
+    del config_dict["id"]
+    del config_dict["fold"]
+    del config_dict["results_dir"]
+    print(f"{json.dumps(config_dict, sort_keys=True, default=str)=}")
+    config.__setattr__(
+        "fold_group",
+        hashlib.sha256(
+            bytes(json.dumps(config_dict, sort_keys=True, default=str), encoding="UTF-8")
+        ).hexdigest(),
+    )
     # Set up wandb if specified
     if config.wandb:
         wandb.init(project="non-negative-matrix-factorisation", dir=config.results_dir)
