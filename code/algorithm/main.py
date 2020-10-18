@@ -244,6 +244,12 @@ def parse_args(args: List[str]) -> argparse.Namespace:
         default=1e-4,
         help="The maximum number of dictionary update iterations to perform.",
     )
+    model_parser.add_argument(
+        "--lam",
+        type=float,
+        default=0.3,
+        help="Regularisation coefficient for the L1 robust NMF model."
+    )
     logging_parser = parser.add_argument_group("logging")
     logging_parser.add_argument(
         "--id",

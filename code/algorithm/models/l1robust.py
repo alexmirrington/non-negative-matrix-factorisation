@@ -85,8 +85,7 @@ class L1RobustNMF(NMFAlgorithm):
             self._update_H()
 
             # Normalise W and H
-            self._normalise_W()
-            self._normalise_H()
+            self._normalise()
 
             new_WH = self.W @ self.H
             error = self.abs_reconstruction_error(self.X)
@@ -104,7 +103,7 @@ class L1RobustNMF(NMFAlgorithm):
 
     def reconstructed_data(self) -> np.ndarray:
         """Return the reconstruction of the input data."""
-        return self.W @ self.H + self.S
+        return self.W @ self.H
 
     def _update_W(self):
         """Update W with respect to the objective."""
@@ -122,23 +121,19 @@ class L1RobustNMF(NMFAlgorithm):
         """Update S with respect to the objective."""
         new_S = self.X - self.W @ self.H
 
-        # print((new_S <= self.lam/2) & (new_S >= -self.lam/2))
         new_S = np.where((new_S <= self.lam / 2) & (new_S >= -self.lam / 2), 0, new_S)
         new_S = np.where(new_S > self.lam / 2, new_S - self.lam / 2, new_S)
         new_S = np.where(new_S < -self.lam / 2, new_S + self.lam / 2, new_S)
         self.S = new_S
 
-    def _normalise_W(self):
-        """Normalise W as W_{ij} = W_{ij}/sqrt(sum_k(W_{kj}^2))."""
-        # Denominator is matrix same size as W but with the column norm value
-        # repeated at every element in same column.
-        divisor = np.sqrt(np.sum(self.W ** 2, axis=0)) * np.ones(self.W.shape)
-        self.W = self.W / divisor
+    def _normalise(self):
+        """Normalise W and H matrices.
 
-    def _normalise_H(self):
-        """Normalise H as H_{ij} = H_{ij} * sqrt(sum_k(W_{ki}^2)).
-
-        All elements in ith row of H get multiplied by the ith column norm of W.
+        W becomes W_{ij} = W_{ij}/sqrt(sum_k(W_{kj}^2)).
+        H becomes H_{ij} = H_{ij} * sqrt(sum_k(W_{ki}^2)). ie. All elements in ith row of H get
+        multiplied by the ith column norm of W.
         """
-        multiplier = np.sqrt(np.sum(self.W ** 2, axis=0))[:, np.newaxis] * np.ones(self.H.shape)
+        divisor = np.sqrt(np.sum(self.W**2, axis=0)) * np.ones(self.W.shape)
+        multiplier = np.sqrt(np.sum(self.W**2, axis=0))[:, np.newaxis] * np.ones(self.H.shape)
+        self.W =  self.W / divisor
         self.H = self.H * multiplier

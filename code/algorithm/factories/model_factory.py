@@ -42,4 +42,4 @@ class ModelFactory:
     @staticmethod
     def _create_l1_robust_nmf(data: np.ndarray, config: argparse.Namespace) -> NMFAlgorithm:
         # lam=0.3 is recommended in the paper.
-        return L1RobustNMF(data, n_components=config.components, lam=0.3)
+        return L1RobustNMF(data, n_components=config.components, lam=config.lam)
