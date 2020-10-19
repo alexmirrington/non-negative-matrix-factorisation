@@ -37,14 +37,20 @@ class PreprocessorFactory:
     def _create_missing_block(
         config: argparse.Namespace,
     ) -> Callable[[np.ndarray], np.ndarray]:
-        return lambda data: missing_block(data, config.noise_blocksize, num_blocks=config.noise_blocks, fill=config.scale)
+        return lambda data: missing_block(
+            data, config.noise_blocksize, num_blocks=config.noise_blocks, fill=config.scale
+        )
 
     @staticmethod
     def _create_uniform(
         config: argparse.Namespace,
     ) -> Callable[[np.ndarray], np.ndarray]:
-        return lambda data: uniform(data, mean=config.noise_mean, std=config.noise_std, min=0, max=config.scale)
+        return lambda data: uniform(
+            data, mean=config.noise_mean, std=config.noise_std, min=0, max=config.scale
+        )
 
     @staticmethod
     def _create_gaussian(config: argparse.Namespace) -> Callable[[np.ndarray], np.ndarray]:
-        return lambda data: gaussian(data, mean=config.noise_mean, std=config.noise_std, min=0, max=config.scale)
+        return lambda data: gaussian(
+            data, mean=config.noise_mean, std=config.noise_std, min=0, max=config.scale
+        )

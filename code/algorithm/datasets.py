@@ -7,7 +7,10 @@ from PIL import Image
 
 
 def load_data(
-    root: str, reduce: int, scale: float, preprocessor: Optional[Callable[[np.ndarray], np.ndarray]] = None
+    root: str,
+    reduce: int,
+    scale: float,
+    preprocessor: Optional[Callable[[np.ndarray], np.ndarray]] = None,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """Load ORL or Extended YaleB dataset to numpy array.
 
