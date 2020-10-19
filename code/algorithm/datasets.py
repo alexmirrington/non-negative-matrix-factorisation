@@ -7,7 +7,7 @@ from PIL import Image
 
 
 def load_data(
-    root: str, reduce: int = 4, preprocessor: Optional[Callable[[np.ndarray], np.ndarray]] = None
+    root: str, reduce: int, scale: float, preprocessor: Optional[Callable[[np.ndarray], np.ndarray]] = None
 ) -> Tuple[np.ndarray, np.ndarray]:
     """Load ORL or Extended YaleB dataset to numpy array.
 
@@ -40,6 +40,10 @@ def load_data(
 
 
             img = np.asarray(img)
+
+            # Scale down
+            img = img * scale / 255
+
             # APPLY NOISE FUNCTION TO IMAGE HERE
             # Not sure how you want to set up config with this,
             # as the different noises have different parameters.

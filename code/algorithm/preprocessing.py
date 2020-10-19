@@ -2,7 +2,7 @@
 import numpy as np
 
 
-def salt_and_pepper(data: np.ndarray, p: float, r: float) -> np.ndarray:
+def salt_and_pepper(data: np.ndarray, scale: float, p: float, r: float) -> np.ndarray:
     """Corrupt image with salt and pepper noise.
 
     This noise randomly changes a chosen proportion of pixels to either white or black.
@@ -21,7 +21,7 @@ def salt_and_pepper(data: np.ndarray, p: float, r: float) -> np.ndarray:
     # Create a mask of randomly shuffled white (255), black (0),
     # and unchanged (-1) values which can be applied to the image
     corrupt_mask = np.full(data.size, -1)
-    corrupt_mask[:num_white] = np.full(num_white, 255)
+    corrupt_mask[:num_white] = np.full(num_white, scale)
     corrupt_mask[num_white:num_corrupt] = np.full(num_corrupt - num_white, 0)
     np.random.shuffle(corrupt_mask)
     corrupt_mask = corrupt_mask.reshape(data.shape)
@@ -32,43 +32,8 @@ def salt_and_pepper(data: np.ndarray, p: float, r: float) -> np.ndarray:
     return data
 
 
-# def salt_and_pepper(data: np.ndarray, p: float, r: float) -> np.ndarray:
-#     """Corrupt input data with salt and pepper noise.
-#
-#     This noise randomly changes a chosen proportion of pixels to either white or black.
-#     The ratio of white to black pixels can also be controlled.
-#
-#     Each column (ie. each image) is corrupted separately.
-#
-#     Args
-#     ---
-#     data: The input data to be corrupted. Shape: (n_features, n_samples).
-#     p: The proportion of pixels that should be made either white or black
-#     r: The proportion of the corrupted pixels that are white. Conversely (1-p) is the
-#         proportion of corrupted pixels that are black.
-#
-#     """
-#     # Loop through and noise each sample separately, since p and r values are per sample
-#     for col in range(data.shape[1]):
-#         sample = data[:, col]
-#         num_corrupt = int(round(len(sample) * p))
-#         num_white = int(round(num_corrupt) * r)
-#
-#         # Create a mask of randomly shuffled white (255), black (0),
-#         # and unchanged (-1) values which can be applied to the image
-#         corrupt_mask = np.full(sample.shape, -1)
-#         corrupt_mask[:num_white] = np.full(num_white, 255)
-#         corrupt_mask[num_white: num_corrupt] = np.full(num_corrupt - num_white, 0)
-#         np.random.shuffle(corrupt_mask)
-#
-#         # Add the noise to the data
-#         data[:, col] = np.where(corrupt_mask == -1, sample, corrupt_mask)
-#
-#     return data
-
-
 def missing_block(
-    data: np.ndarray, block_size: int, num_blocks: int = 1, fill: int = 255
+    data: np.ndarray, block_size: int, num_blocks: int = 1, fill: int = 1
 ) -> np.ndarray:
     """Corrupt image by removing a block/s of pixels, and setting to white.
 
@@ -94,7 +59,7 @@ def missing_block(
     return data
 
 
-def gaussian(data: np.ndarray, mean: float = 0, std: float = 1):
+def gaussian(data: np.ndarray, mean: float = 0, std: float = 1, min: float = 0, max: float = 1):
     """Corrupt image by adding Gaussian noise to pixel values.
 
     Args
@@ -105,10 +70,10 @@ def gaussian(data: np.ndarray, mean: float = 0, std: float = 1):
     """
     # Add noise, ensuring values remain between 0 and 255
     noise = np.random.normal(mean, std, data.shape)
-    return np.clip(data + noise, 0, 255)
+    return np.clip(data + noise, min, max)
 
 
-def uniform(data: np.ndarray, mean: float = 0, std: float = 1):
+def uniform(data: np.ndarray, mean: float = 0, std: float = 1, min: float = 0, max: float = 1):
     """Corrupt image with uniform distributed noise.
 
     The resultant noise will lie in [mean - sqrt(3) * std, mean + sqrt(3) * std].
@@ -127,4 +92,4 @@ def uniform(data: np.ndarray, mean: float = 0, std: float = 1):
 
     # Add noise, ensuring values remain between 0 and 255
     noise = np.random.uniform(mean - std * 3 ** 0.5, mean + std * 3 ** 0.5, data.shape)
-    return np.clip(data + noise, 0, 255)
+    return np.clip(data + noise, min, max)
