@@ -7,7 +7,7 @@ parameters:
   seed:
     values: [0, 1, 2, 3, 4]
   model:
-    values: ["standard", "l21"]
+    values: ["standard", "l21", "l1_robust"]
   noise_p:
     values: [0.1, 0.2, 0.4]
   noise_r:
