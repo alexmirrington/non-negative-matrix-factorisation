@@ -133,7 +133,7 @@ class L1RobustNMF(NMFAlgorithm):
         H becomes H_{ij} = H_{ij} * sqrt(sum_k(W_{ki}^2)). ie. All elements in ith row of H get
         multiplied by the ith column norm of W.
         """
-        divisor = np.sqrt(np.sum(self.W**2, axis=0)) * np.ones(self.W.shape)
-        multiplier = np.sqrt(np.sum(self.W**2, axis=0))[:, np.newaxis] * np.ones(self.H.shape)
-        self.W =  self.W / divisor
+        divisor = np.sqrt(np.sum(self.W ** 2, axis=0)) * np.ones(self.W.shape)
+        multiplier = np.sqrt(np.sum(self.W ** 2, axis=0))[:, np.newaxis] * np.ones(self.H.shape)
+        self.W = self.W / divisor
         self.H = self.H * multiplier

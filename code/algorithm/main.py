@@ -53,6 +53,9 @@ def main(config: argparse.Namespace):
         root=data_dir, reduce=config.reduce, preprocessor=preprocessor
     )
     print(config.dataset)
+    if config.scale != 255:
+        noisy_images = noisy_images * config.scale / 255
+        clean_images = clean_images * config.scale / 255
     print(f"full: {clean_images.shape}")
 
     # Generate indices to train and test on
@@ -173,6 +176,12 @@ def parse_args(args: List[str]) -> argparse.Namespace:
         default=0,
         help="The seed to use when choosing a subset of the data to train on.",
     )
+    data_parser.add_argument(
+        "--scale",
+        type=float,
+        default=255,
+        help="Scale of the input data, i.e. the maximum value the data can take.",
+    )
     noise_parser = parser.add_argument_group("noise")
     noise_parser.add_argument(
         "--noise",
@@ -248,7 +257,7 @@ def parse_args(args: List[str]) -> argparse.Namespace:
         "--lam",
         type=float,
         default=0.3,
-        help="Regularisation coefficient for the L1 robust NMF model."
+        help="Regularisation coefficient for the L1 robust NMF model.",
     )
     logging_parser = parser.add_argument_group("logging")
     logging_parser.add_argument(
