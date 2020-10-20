@@ -1,0 +1,24 @@
+program: code/algorithm/main.py
+method: grid
+project: "non-negative-matrix-factorisation"
+name: "noise-gaussian-and-uniform"
+description: "Grid search over multiple models with gaussian or uniform noise."
+parameters:
+  seed:
+    values: [0, 1, 2, 3, 4]
+  model:
+    values: ["standard", "l21", "l1_robust"]
+  noise_std:
+    values: [0.1, 0.2, 0.4]
+  dataset:
+    values: ["orl", "yaleb"]
+  noise:
+    values: ["gaussian", "uniform"]
+command:
+  - ${env}
+  - ${interpreter}
+  - ${program}
+  - "--wandb"
+  - "--noise_mean"
+  - 0
+  - ${args}
