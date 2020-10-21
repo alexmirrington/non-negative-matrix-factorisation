@@ -1,0 +1,24 @@
+program: code/algorithm/main.py
+method: grid
+project: "non-negative-matrix-factorisation"
+name: "noise-missing-block"
+description: "Grid search over multiple models with missing block noise."
+parameters:
+  seed:
+    values: [0, 1, 2, 3, 4]
+  model:
+    values: ["standard", "l21", "l1_robust"]
+  noise_blocksize:
+    values: [4, 8]
+  noise_blocks:
+    values: [8, 16]
+  dataset:
+    values: ["orl", "yaleb"]
+command:
+  - ${env}
+  - ${interpreter}
+  - ${program}
+  - "--wandb"
+  - "--noise"
+  - "missing_block"
+  - ${args}
