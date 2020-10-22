@@ -48,13 +48,21 @@ By default, `code/algorithm/main.py` will run a standard NMF model on a 90% subs
 
 To change the type of noise used, you can specify the `--noise` parameter along with any additional noise parameters required for the chosen noise type:
 
-**Uniform noise:**  `python code/algorithm/main.py --noise uniform --noise_mean 0 --noise_std 0.1`
+**Uniform noise:**
 
-**Gaussian noise:** `python code/algorithm/main.py --noise gaussian --noise_mean 0 --noise_std 0.1`
+`python code/algorithm/main.py --noise uniform --noise_mean 0 --noise_std 0.1`
 
-**Salt and pepper noise:** `python code/algorithm/main.py --noise salt_and_pepper --noise_p 0.1 --noise_r 0.5`
+**Gaussian noise:**
 
-**Missing block noise:** `python code/algorithm/main.py --noise missing_block --noise_blocksize 4 --noise_blocks 8`
+`python code/algorithm/main.py --noise gaussian --noise_mean 0 --noise_std 0.1`
+
+**Salt and pepper noise:**
+
+`python code/algorithm/main.py --noise salt_and_pepper --noise_p 0.1 --noise_r 0.5`
+
+**Missing block noise:**
+
+`python code/algorithm/main.py --noise missing_block --noise_blocksize 4 --noise_blocks 8`
 
 You should only specify the noise parameters for the chosen type of noise, _e.g._ if using `uniform` noise, only specify `--noise_mean` and `--noise_std`, and not other parameters like `--noise_p`.
 
@@ -62,11 +70,17 @@ You should only specify the noise parameters for the chosen type of noise, _e.g.
 
 To change the type of noise used, you can specify the `--model` parameter along with either `standard` for standard NMF (the default), `l1_robust` for RNMF or `l21` for L2,1 NMF:
 
-**Standard NMF**: `python code/algorithm/main.py --model standard`
+**Standard NMF**:
 
-**RNMF**: `python code/algorithm/main.py --model l1_robust`
+`python code/algorithm/main.py --model standard`
 
-**L2,1 NMF**: `python code/algorithm/main.py --model l21`
+**RNMF**:
+
+`python code/algorithm/main.py --model l1_robust`
+
+**L2,1 NMF**:
+
+`python code/algorithm/main.py --model l21`
 
 ### Additional configuration
 
