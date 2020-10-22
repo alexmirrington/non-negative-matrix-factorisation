@@ -60,13 +60,13 @@ You should only specify the noise parameters for the chosen type of noise, _e.g.
 
 ### Changing the model
 
-To change the type of noise used, you can specify the `--model` parameter along with either `standard` for standard NMF (the default), `l1_robust` for RNMF or `l21` for $$L_{2,1}$$ NMF:
+To change the type of noise used, you can specify the `--model` parameter along with either `standard` for standard NMF (the default), `l1_robust` for RNMF or `l21` for L2,1 NMF:
 
 **Standard NMF**: `python code/algorithm/main.py --model standard`
 
 **RNMF**: `python code/algorithm/main.py --model l1_robust`
 
-**$$L_{2,1}$$ NMF**: `python code/algorithm/main.py --model l21`
+**L2,1 NMF**: `python code/algorithm/main.py --model l21`
 
 ### Additional configuration
 
