@@ -40,6 +40,8 @@ Make sure to install all python requirements like so:
 
 `pip install -r requirements.txt`
 
+Download the ORL and YaleB datasets from Canvas, and place then in the `code/data` folder. After unzipping the datasets, the `code/data` should contain a `README` file, along with a folder called `CroppedYaleB` containing the YaleB dataset and a folder called `ORL` containing the ORL dataset.
+
 By default, `code/algorithm/main.py` will run a standard NMF model on a 90% subset of the ORL dataset, with no additional noise applied to the training data. Results will be logged to the terminal as well as to a `.jsonl` file in `code/algorithm/results`.
 
 ### Changing the noise
