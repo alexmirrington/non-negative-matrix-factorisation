@@ -1,0 +1,18 @@
+program: code/algorithm/main.py
+method: grid
+project: "non-negative-matrix-factorisation"
+name: "control"
+description: "Grid search over multiple models with clean input data."
+parameters:
+  seed:
+    values: [0, 1, 2, 3, 4]
+  model:
+    values: ["standard", "l21", "l1_robust"]
+  dataset:
+    values: ["orl", "yaleb"]
+command:
+  - ${env}
+  - ${interpreter}
+  - ${program}
+  - "--wandb"
+  - ${args}
