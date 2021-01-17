@@ -10,13 +10,13 @@ from pathlib import Path
 from typing import List
 
 import numpy as np
+import wandb
 from datasets import load_data
 from factories import ModelFactory, PreprocessorFactory
 from loggers import JSONLLogger, StreamLogger, WandbLogger
 from termcolor import colored
 from utilities import rescale
 
-import wandb
 from config import Dataset, Model, Noise
 
 
