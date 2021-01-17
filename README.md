@@ -1,6 +1,13 @@
 # Non-negative Matrix Factorisation
 
 <p align="center">
+  <a href="https://wandb.ai/alexmirrington/non-negative-matrix-factorisation">
+    <img
+      src="https://img.shields.io/static/v1?label=visualise&message=wandb&color=yellow&logo=Weights%20%26%20Biases"
+      alt="Visualise using Weights & Biases"
+    />
+  </a>
+  
   <a href="https://github.com/alexmirrington/non-negative-matrix-factorisation/actions?query=workflow%3Astyle">
     <img
       src="https://github.com/alexmirrington/non-negative-matrix-factorisation/workflows/style/badge.svg"
