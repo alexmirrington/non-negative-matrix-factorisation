@@ -36,11 +36,10 @@ def load_data(
 
             # load image.
             img = Image.open(os.path.join(root, person, fname))
-            img = img.convert('L')  # grey image.
-            
+            img = img.convert("L")  # grey image.
+
             # reduce computation complexity.
             img = img.resize([s // reduce for s in img.size])
-
 
             img = np.asarray(img)
 
@@ -90,7 +89,7 @@ def salt_and_pepper(data: np.ndarray, p: float, r: float) -> np.ndarray:
     # and unchanged (-1) values which can be applied to the image
     corrupt_mask = np.full(data.size, -1)
     corrupt_mask[:num_white] = np.full(num_white, 255)
-    corrupt_mask[num_white: num_corrupt] = np.full(num_corrupt - num_white, 0)
+    corrupt_mask[num_white:num_corrupt] = np.full(num_corrupt - num_white, 0)
     np.random.shuffle(corrupt_mask)
     corrupt_mask = corrupt_mask.reshape(data.shape)
 
@@ -98,6 +97,7 @@ def salt_and_pepper(data: np.ndarray, p: float, r: float) -> np.ndarray:
     data = np.where(corrupt_mask == -1, data, corrupt_mask)
 
     return data
+
 
 # def salt_and_pepper(data: np.ndarray, p: float, r: float) -> np.ndarray:
 #     """Corrupt input data with salt and pepper noise.
@@ -144,9 +144,7 @@ def missing_block(data: np.ndarray, block_size: int, num_blocks: int = 1) -> np.
     data: The input data to be corrupted. Shape: (x_pixels, y_pixels).
     block_size: Size of the block/s of pixels to be removed from each image.
     num_blocks: How many blocks to remove.
-
     """
-
     # Get a random pixel value between (0, 0) and (x_pixels-block_size, y_pixels-block_size)
     rand_x = np.random.randint(data.shape[0] - block_size + 1)
     rand_y = np.random.randint(data.shape[1] - block_size + 1)

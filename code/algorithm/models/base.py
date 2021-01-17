@@ -3,16 +3,18 @@ from abc import ABC, abstractmethod
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple
 
 import numpy as np
-from metrics import (relative_reconstruction_error, average_accuracy,
-                     normalised_mutual_info, assign_cluster_labels)
+from metrics import (
+    assign_cluster_labels,
+    average_accuracy,
+    normalised_mutual_info,
+    relative_reconstruction_error,
+)
 
 
 class NMFAlgorithm(ABC):
     """Base class with shared functionality for the different NMF methods."""
 
-    def _init_matrices(self,
-                       shapes: List[Tuple],
-                       init_type: str = 'nndsvdar') -> Tuple[np.ndarray]:
+    def _init_matrices(self, shapes: List[Tuple], init_type: str = "nndsvdar") -> Tuple[np.ndarray]:
         """Initalise a matrix of the given size.
 
         Acknowledgements
@@ -64,18 +66,19 @@ class NMFAlgorithm(ABC):
         assert len(shapes) == 2
         assert shapes[0][1] == shapes[1][0]
 
-
-        if init_type == 'random':
+        if init_type == "random":
             scale = np.sqrt(self.X.mean() / self.k)
             return scale * np.random.rand(*shapes[0]), scale * np.random.rand(*shapes[1])
 
-        elif init_type == 'nndsvda' or 'nndsvdar':
+        elif init_type == "nndsvda" or "nndsvdar":
             if self.k >= self.n and self.k >= self.d:
-                raise ValueError("Number of components must be less than min(n_features, n_samples)"
-                                 " to use nndsvd. Use init_type='random' instead.")
+                raise ValueError(
+                    "Number of components must be less than min(n_features, n_samples)"
+                    " to use nndsvd. Use init_type='random' instead."
+                )
             U, s, V = np.linalg.svd(self.X, full_matrices=False)
             # Keep only n_components largest singular triplets
-            U, s, V = U[:, :self.k], s[:self.k], V[:self.k, :]
+            U, s, V = U[:, : self.k], s[: self.k], V[: self.k, :]
 
             W = np.zeros(shapes[0])
             H = np.zeros(shapes[1])
@@ -83,6 +86,7 @@ class NMFAlgorithm(ABC):
             def pos(in_arr: np.ndarray):
                 """Keep only positive values, setting negative values to 0."""
                 return np.where(in_arr >= 0, in_arr, 0)
+
             def neg(in_arr: np.ndarray):
                 """Keep only the magnitude of negative values, setting positive values to 0."""
                 return np.where(in_arr < 0, -in_arr, 0)
@@ -114,16 +118,16 @@ class NMFAlgorithm(ABC):
 
             X_mean = np.abs(self.X.mean())
 
-            if init_type == 'nndsvda':
+            if init_type == "nndsvda":
                 # Avoid any zeros in initialisation by adding mean of input data
                 W = np.where(W == 0, X_mean, W)
                 H = np.where(H == 0, X_mean, H)
 
-            elif init_type == 'nndsvdar':
+            elif init_type == "nndsvdar":
                 # Avoid any zeros by adding a random uniform number in [0, X.mean()/100]
                 scale = X_mean / 100
-                W = np.where(W == 0, np.random.rand()*scale, W)
-                H = np.where(H == 0, np.random.rand()*scale, H)
+                W = np.where(W == 0, np.random.rand() * scale, W)
+                H = np.where(H == 0, np.random.rand() * scale, H)
 
             return W, H
 
@@ -194,8 +198,8 @@ class NMFAlgorithm(ABC):
                         Shape: (n_samples,)
         """
         results = {}
-        results['rre'] = relative_reconstruction_error(clean_data, self.reconstructed_data())
+        results["rre"] = relative_reconstruction_error(clean_data, self.reconstructed_data())
         pred_labels = assign_cluster_labels(self.H.T, true_labels)
-        results['accuracy'] = average_accuracy(true_labels, pred_labels)
-        results['nmi'] = normalised_mutual_info(true_labels, pred_labels)
+        results["accuracy"] = average_accuracy(true_labels, pred_labels)
+        results["nmi"] = normalised_mutual_info(true_labels, pred_labels)
         return results

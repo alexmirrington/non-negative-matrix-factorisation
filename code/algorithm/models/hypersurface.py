@@ -36,7 +36,6 @@ class HypersurfaceNMF(NMFAlgorithm):
         self.k = n_components
         self.W, self.H = self._init_matrices([(self.d, self.k), (self.k, self.n)])
 
-
     def reconstructed_data(self):
         """Return the reconstruction of the input data."""
         return self.W @ self.H
@@ -44,7 +43,7 @@ class HypersurfaceNMF(NMFAlgorithm):
     def reconstruction_error(self):
         """Return the reconstruction error between the original data and reconstructed data."""
         return np.linalg.norm(self.X - (self.W @ self.H))
-    
+
     def fit(
         self,
         max_iter: int = 10000,
