@@ -7,7 +7,7 @@
       alt="Visualise using Weights & Biases"
     />
   </a>
-  
+
   <a href="https://github.com/alexmirrington/non-negative-matrix-factorisation/actions?query=workflow%3Astyle">
     <img
       src="https://github.com/alexmirrington/non-negative-matrix-factorisation/workflows/style/badge.svg"
